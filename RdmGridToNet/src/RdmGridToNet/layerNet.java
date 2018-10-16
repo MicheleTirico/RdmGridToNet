@@ -22,6 +22,8 @@ import org.graphstream.graph.Path;
 import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 
+import scala.languageFeature.reflectiveCalls;
+
 public class layerNet extends framework {
  
 	private int numNodes  ;
@@ -400,7 +402,7 @@ public class layerNet extends framework {
 			       Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 	}
 	
-	// get list of neighbor String
+	// get list of neighbor 
 	public ArrayList<Node> getListNeighbors ( Node node ) { 
 		
 		ArrayList<Node> listNeig = new ArrayList<Node>();
@@ -411,11 +413,22 @@ public class layerNet extends framework {
 			if ( !listNeig.contains(neig) )
 				listNeig.add(neig);
 		} 
-		listNeig.remove(node) ;
+		listNeig.remove(node) ; 
 		return listNeig ;
 	}
 	
-	// get list of neighbor String
+	public Node[] getNeighbors ( Node node ) {
+		Node[] arrayNeig = null ;
+		Iterator<Node> iter = node.getNeighborNodeIterator() ;	
+		int pos = 0 ;
+		while (iter.hasNext()) {		 
+			arrayNeig[pos] =  iter.next() ;
+			pos++ ;
+		}
+		return arrayNeig;
+	}
+	
+	// get list of neighbor 
 	public ArrayList<Node> getListNeighbors ( Node node , boolean addNode) { 
 		
 		ArrayList<Node> listNeig = new ArrayList<Node>();

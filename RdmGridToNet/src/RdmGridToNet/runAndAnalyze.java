@@ -47,7 +47,7 @@ public class runAndAnalyze extends framework {
 		lRd = new layerRd(1, 1, sizeGrid, sizeGrid, typeRadius.circle);		
 		lRd.initializeCostVal(1,0);	
 			
-		setRdType ( RdmType.U_SkateWorld) ;	
+		setRdType ( RdmType.mazes) ;	
 		lRd.setGsParameters(f, k, Da, Db, typeDiffusion.mooreCost );
 		
 		lMl = new layerMaxLoc(true,true, typeInit.test, typeComp.wholeGrid, morphogen.b);
@@ -77,19 +77,19 @@ public class runAndAnalyze extends framework {
 		// setup viz netGraph
 		handleVizStype netViz = new handleVizStype( netGraph ,stylesheet.manual , "seed", 1) ;
 		netViz.setupIdViz(false , netGraph, 20 , "black");
-		netViz.setupDefaultParam (netGraph, "black", "black", 1 , 0.5 );
+		netViz.setupDefaultParam (netGraph, "black", "black", 5 , 0.5 );
 		netViz.setupVizBooleanAtr(true, netGraph, "black", "red" , false , false ) ;
-		netViz.setupFixScaleManual( true , netGraph, sizeGrid , 0);
+		netViz.setupFixScaleManual( false , netGraph, sizeGrid , 0);
 		
 		netGraph.display(false);	
 				
 		int t = 0 ;
-		while ( t <= 10000 && ! lSeed.getListSeeds().isEmpty()  ) {	
+		while ( t <= 150 && ! lSeed.getListSeeds().isEmpty()  ) {	
 			System.out.println("------------- step " +t);
 			try { 
 				lRd.updateLayer();
 				lMl.updateLayer();
-				lNet.updateLayers(typeVectorField.slopeDistanceRadius , 0 , true , .1 );
+				lNet.updateLayers(typeVectorField.slopeDistanceRadius , 0 , true , 1 );
 			
 				aN.computeIndicators(t);
 				sN.storeDSGStep(t);
