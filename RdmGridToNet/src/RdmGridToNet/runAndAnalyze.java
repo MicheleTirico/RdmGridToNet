@@ -47,7 +47,7 @@ public class runAndAnalyze extends framework {
 		lRd = new layerRd(1, 1, sizeGrid, sizeGrid, typeRadius.circle);		
 		lRd.initializeCostVal(1,0);	
 			
-		setRdType ( RdmType.mazes) ;	
+		setRdType ( RdmType.solitions) ;	
 		lRd.setGsParameters(f, k, Da, Db, typeDiffusion.mooreCost );
 		
 		lMl = new layerMaxLoc(true,true, typeInit.test, typeComp.wholeGrid, morphogen.b);
@@ -83,13 +83,13 @@ public class runAndAnalyze extends framework {
 		
 		netGraph.display(false);	
 				
-		int t = 0 ;
-		while ( t <= 150 && ! lSeed.getListSeeds().isEmpty()  ) {	
+		int t = 0 ; 
+		while ( t <= 100 && ! lSeed.getListSeeds().isEmpty()  ) {	
 			System.out.println("------------- step " +t);
 			try { 
 				lRd.updateLayer();
 				lMl.updateLayer();
-				lNet.updateLayers(typeVectorField.slopeDistanceRadius , 0 , true , 1 );
+				lNet.updateLayers(typeVectorField.slopeDistanceRadius , 0 , true , 15 );
 			
 				aN.computeIndicators(t);
 				sN.storeDSGStep(t);

@@ -38,7 +38,7 @@ public class layerNet extends framework {
 		this( null ) ;
 	}
 	
-	public layerNet( String id) {
+	public layerNet(String id) {
 		this.id = id ;
 	}
 	
