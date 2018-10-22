@@ -23,7 +23,7 @@ import RdmGridToNet.layerNet.typeSetupLayer;
 import RdmGridToNet.layerRd.typeComputeMaxLocal;
 import RdmGridToNet.layerRd.typeDiffusion;
 import RdmGridToNet.layerRd.typeInitializationMaxLocal;
-
+import RdmGridToNet.staticSympleNetwork.typeGraph;
 import dataAnalysis.analyze;
 import dataAnalysis.analyzeNetwork;
 import dataAnalysis.handleFolder;
@@ -84,13 +84,13 @@ public class runAndAnalyze extends framework {
 		netGraph.display(false);	
 				
 		int t = 0 ; 
-		while ( t <= 100 && ! lSeed.getListSeeds().isEmpty()  ) {	
+		while ( t <= 50 && ! lSeed.getListSeeds().isEmpty()  ) {	
 			System.out.println("------------- step " +t);
 			try { 
 				lRd.updateLayer();
 				lMl.updateLayer();
 				lNet.updateLayers(typeVectorField.slopeDistanceRadius , 0 , true , 15 );
-			
+		
 				aN.computeIndicators(t);
 				sN.storeDSGStep(t);
 				t++;
@@ -102,11 +102,9 @@ public class runAndAnalyze extends framework {
 		
 		aN.closeFileWriter();
 		sN.closeStore();
-		
+		sSn.init(typeGraph.multiGraph);
 		sSn.compute();
-		
-		
-		System.out.println( sSn.getGraph().getNodeCount()) ;
+		sSn.getGraph().display(false);
 		
 		// only for viz
 		for ( seed s : lSeed.getListSeeds()) 	
