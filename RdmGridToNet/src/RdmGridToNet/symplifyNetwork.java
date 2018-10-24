@@ -22,6 +22,8 @@ import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 
+import graphstream_dev_io_test.graphstreamReadGraph;
+
 public class symplifyNetwork extends framework{
 
 	private Graph stSimGr = new SingleGraph ( "stSimNet" ),
@@ -68,17 +70,16 @@ public class symplifyNetwork extends framework{
 	
 // COMPUTE METHODS ----------------------------------------------------------------------------------------------------------------------------------	
 	public void compute ( ) {
+		grToCreate.getEachNode().forEach(n -> grToCreate.removeNode(n));
 		if ( run ) { 
-		
-			
 			ArrayList < Node > listNodeAdded  = computeNodes(addNode, netGr, grToCreate);	
 			computePaths(listNodeAdded, netGr, grToCreate, addEdge) ;
 		}
 	}
 
 	public void compute ( int t ) {
-		if ( run &&  t / stepToAnalyze - (int)(t / stepToAnalyze ) < 0.01 ) { 
-		
+		grToCreate.getEachNode().forEach(n -> grToCreate.removeNode(n));
+		if ( run && t / stepToAnalyze - (int)(t / stepToAnalyze ) < 0.01 ) { 	
 			ArrayList < Node > listNodeAdded  = computeNodes(addNode, netGr, grToCreate);	
 			computePaths(listNodeAdded, netGr, grToCreate, addEdge) ;
 		}
@@ -182,27 +183,36 @@ public class symplifyNetwork extends framework{
 		double len = dijkstra.getPathLength(n1) ;
 		Map<Path,Double>  mapPathLen = new HashMap<Path,Double>();
 		Map<List<Node>,Double>  mapNodePathLen = new HashMap<List<Node> , Double>();
+		ArrayList<Double> listLen = new ArrayList<Double>();
+		
 		ed = createEdge(grToCreate, n0Sim, n1Sim);	
 		if ( ed == null ) {
 			ed = getEdgeBetweenNodes(n0Sim, n1Sim);
 			mapPathLen = ed.getAttribute("pathLen");
 			mapNodePathLen = ed.getAttribute("nodePathLen");
+			listLen = ed.getAttribute("listLen");
 			if ( mapPathLen == null ) {
 				mapPathLen = new HashMap<Path,Double>();
 				mapNodePathLen = new HashMap<List<Node> , Double>(); 
+				listLen = new ArrayList<Double> () ;
 			}
 		}
 		else {
 			mapPathLen = ed.getAttribute("pathLen");
 			mapNodePathLen = ed.getAttribute("mapNodePathLen") ;
+			listLen = ed.getAttribute("lisLen"); 
 			if ( mapPathLen == null )
 				mapPathLen = new HashMap<Path,Double>();
 			if ( mapNodePathLen == null )
 				mapNodePathLen = new HashMap<List<Node>,Double>();
+			if ( listLen == null )
+				listLen = new ArrayList<Double>();
 		}
 		if ( ! mapPathLen.containsValue(len)) {
 			mapPathLen.put(p, len);
 			ed.addAttribute("pathLen", mapPathLen) ;
+			listLen.add(len);
+			ed.addAttribute("listLen", listLen);
 		}
 	}
 	

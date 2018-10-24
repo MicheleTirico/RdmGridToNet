@@ -1,5 +1,5 @@
 package dataAnalysis;
 
-public class analysis {
+public class storeRd {
 
 }

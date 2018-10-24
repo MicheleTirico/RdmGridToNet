@@ -6,23 +6,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.graphstream.algorithm.Toolkit;
 import org.graphstream.graph.Graph;
-import org.graphstream.graph.implementations.SingleGraph;
-
-import dataAnalysis.analysis.indicator;
-import dataAnalysis_old_01.expCsv;
-import dataAnalysis_old_01.handleFolder;
+import dataAnalysis.indicatorSet.indicator;;
 
 public class analyzeNetwork  {
 	
 	private ArrayList<indicator> listIndicators = new ArrayList<indicator> ();
 	private Graph graphToAnalyze ;
-	boolean run ;
-	double stepToAnalyze ;
-	private String 	header , nameFile  , path , pathNetAn ;
-	private FileWriter fileWriter ;
+	private boolean run ;
+	private double stepToAnalyze ;
+	private String 	header , nameFile  , path  ;
 	private handleFolder hF ;
+	private indicatorSet iS = new indicatorSet();
 	
 	public analyzeNetwork () throws IOException {
 		this(false ,0 ,null, null, null, null);
@@ -34,54 +29,65 @@ public class analyzeNetwork  {
 		this.graphToAnalyze = graphToAnalyze ;
 		this.path = path +"\\"+ nameFolder + "\\";
 		this.nameFile = nameFile;
-		hF = new handleFolder(path) ;
-		pathNetAn = hF.createNewGenericFolder(nameFolder); 
-		analysis an = new analysis();
-		an.init(graphToAnalyze);
+		if ( run ) {
+			hF = new handleFolder(path) ;
+			hF.createNewGenericFolder(nameFolder); 
+		}
 	}
 	
 	public void initAnalysis ( ) throws IOException {
-		
 		if ( run )
 			for ( indicator in : listIndicators ) {
 				in.setId(in.toString());
-				in.setFw(path +nameFile+"_"+ in + ".csv" );
-				header = in.toString();
-				expCsv.addCsv_header( in.getFw(), header ) ;
+				iS.setPath(path +nameFile+"_"+ in + ".csv" );
+				iS.setFw(in);
+				in.setHeader();
+				header = in.getHeader();
+				expCsv.addCsv_header( iS.getFw(in), header ) ;
 			}
 	}
 	
 	public void compute (int t) throws IOException {
-		for ( indicator in : listIndicators ) {
-			in.setGraph(graphToAnalyze);
-			System.out.println(graphToAnalyze + " " + in.getValue() + " " + in);
-			System.out.println(graphToAnalyze);		
-	
-			fileWriter = in.getFw() ; 
-		
-		
-			double val = in.getValue() ;
-			expCsv.writeLine(fileWriter, Arrays.asList( Double.toString(t) , Double.toString(val) ) , ';' ) ;		
-		
-		}
+		if ( run &&  t / stepToAnalyze - (int)(t / stepToAnalyze ) < 0.01 ) 
+			for ( indicator in : listIndicators ) {
+				iS.setGraph(graphToAnalyze); 
+				FileWriter fw = iS.getFw(in) ; 
+				if ( in.getIsList() ) {					
+					double[] valArr = iS.getValueArr(in);
+					String[] valList = castArrValToString(valArr, t, (int) in.getFrequencyParameters()[0]);
+					System.out.println(in + " " + fw );
+					expCsv.writeLine(fw, Arrays.asList( valList ) , ';' ) ;		
+				}
+				else {
+					double val = iS.getValue(in) ;
+					expCsv.writeLine(fw, Arrays.asList( Double.toString(t) , Double.toString(val) ) , ';' ) ;			
+				}
+			}
 	}
-	
-	public void compute () throws IOException {
-		for ( indicator in : listIndicators ) {
-			in.setGraph(graphToAnalyze);
-			System.out.println(graphToAnalyze + " " + in.getValue() + " " + in);
-			System.out.println(graphToAnalyze);		
 		
-		}
+	public void compute () throws IOException {
+		if ( run  ) 
+			for ( indicator in : listIndicators ) {
+				iS.setGraph(graphToAnalyze); 
+				FileWriter fw = iS.getFw(in) ; 
+				if ( in.getIsList() ) {
+					double[] valArr = iS.getValueArr(in);
+					String[] valList = castArrValToString(valArr, 0, (int) in.getFrequencyParameters()[0]);
+					expCsv.writeLine(fw, Arrays.asList( valList ) , ';' ) ;	
+				}
+				else {
+					double val = iS.getValue(in) ;
+					expCsv.writeLine(fw, Arrays.asList( Double.toString(0) , Double.toString(val) ) , ';' ) ;			
+				}
+			}
 	}
 	
 	// close file writer
-		public void closeFileWriter () throws IOException {
-			if  ( run ) 
-				for ( indicator in : listIndicators )
-					in.getFw().close();
-		}
-		
+	public void closeFileWriter () throws IOException {
+		if  ( run ) 
+			for ( indicator in : listIndicators )
+				iS.getFw(in).close();
+	}		
 		
 // SET METHODS --------------------------------------------------------------------------------------------------------------------------------------
 	public void setIndicators ( indicator indicator ){	
@@ -92,6 +98,15 @@ public class analyzeNetwork  {
 		listIndicators.addAll(list) ;
 	}
 	
-
-
+	// get list ( string ) of values for indicator 
+	public String [] castArrValToString ( double[] valArr , int t , int numVals) {
+		String[] listString  = new String[numVals] ;
+		int pos = 1 ;
+		listString[0] = Integer.toString(t) ; 
+		while ( pos< valArr.length ) {
+			listString[pos]= Double.toString(valArr[pos]);
+			pos++;
+		}
+		return listString ;
+	}
 }

@@ -7,8 +7,6 @@ import javax.swing.JPanel;
 import org.graphstream.graph.Node;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 
-import dataAnalysis_old_01.analyzeNetwork;
-
 public abstract class framework  {
 	
 	protected static boolean isFeedBackModel;
