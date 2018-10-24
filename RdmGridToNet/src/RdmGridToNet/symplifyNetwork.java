@@ -22,38 +22,68 @@ import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 
-public class staticSympleNetwork extends framework{
+public class symplifyNetwork extends framework{
 
-	private Graph stSimGr = new SingleGraph ( "StSimNet" ),
+	private Graph stSimGr = new SingleGraph ( "stSimNet" ),
 					netGr = new SingleGraph ( "net" ) ,
 					mulGr = new MultiGraph  ( "multiGr") ,
 					grToCreate = null ;
 	
 	private int idNodeInt = 0 , idEdgeInt = 0 ;
 	private String idNode , idEdge ; 
-	public enum typeGraph { multiGraph, SingleGraph };
+	public enum typeGraph { multiGraph, singleGraph };
 	private typeGraph typeGraph ;
+	private boolean run , addNode , addEdge;
+	private double stepToAnalyze ;
 	
-	public staticSympleNetwork( Graph  netGr ) {
+	public symplifyNetwork() {
+		this( false, null );
+	}
+	
+	public symplifyNetwork( boolean run , Graph  netGr ) {
+		this.run = run ;
 		this.netGr = netGr ;
 	}
 	
-	public void init(typeGraph typeGraph) {
+	public void init(typeGraph typeGraph, boolean addNode , boolean addEdge) {
 		this.typeGraph = typeGraph ;
-	}
-	
-// COMPUTE METHODS ----------------------------------------------------------------------------------------------------------------------------------	
-	public void compute ( ) {
+		this.addNode = addNode ;
+		this.addEdge = addEdge ;
 		if ( typeGraph.equals(typeGraph.multiGraph) )
 			grToCreate = mulGr ;
 		else 
 			grToCreate = stSimGr;
-		
-		ArrayList < Node > listNodeAdded  = computeNodes(true, netGr, grToCreate);	
-		computePaths(listNodeAdded, netGr, grToCreate) ;
-		grToCreate.display(false);
 	}
+	
+	public void init(typeGraph typeGraph, boolean addNode , boolean addEdge, double stepToAnalyze) {
+		this.typeGraph = typeGraph ;
+		this.addNode = addNode ;
+		this.addEdge = addEdge ;
+		this.stepToAnalyze = stepToAnalyze ;
+		if ( typeGraph.equals(typeGraph.multiGraph) )
+			grToCreate = mulGr ;
+		else 
+			grToCreate = stSimGr;
+	}
+	
+// COMPUTE METHODS ----------------------------------------------------------------------------------------------------------------------------------	
+	public void compute ( ) {
+		if ( run ) { 
 		
+			
+			ArrayList < Node > listNodeAdded  = computeNodes(addNode, netGr, grToCreate);	
+			computePaths(listNodeAdded, netGr, grToCreate, addEdge) ;
+		}
+	}
+
+	public void compute ( int t ) {
+		if ( run &&  t / stepToAnalyze - (int)(t / stepToAnalyze ) < 0.01 ) { 
+		
+			ArrayList < Node > listNodeAdded  = computeNodes(addNode, netGr, grToCreate);	
+			computePaths(listNodeAdded, netGr, grToCreate, addEdge) ;
+		}
+	}
+	
 	private ArrayList<Node> computeNodes ( boolean addNode , Graph grOr ,Graph grToCreate ) {
 		ArrayList<Node> listNodeToAdd = new ArrayList<Node> () ;
 		for ( Node nNet :grOr.getEachNode() ) {
@@ -64,17 +94,22 @@ public class staticSympleNetwork extends framework{
 					Node nSim = createNode(grToCreate, nNet);
 					nSim.addAttribute("nNet", nNet);
 					nNet.addAttribute("nSim", nSim);
-				}	
+					nSim.addAttribute("dNet", d);
+					nSim.addAttribute("listNeig", new ArrayList<Node> () );
+					nSim.addAttribute("listPath", new ArrayList<Path> ());
+					nSim.addAttribute("mapNeigLen", new HashMap<Node, Double>());
+				}
 			}
 		}
 		return listNodeToAdd ;
 	}
 	
-	private void computePaths ( ArrayList < Node > listNodeAdded , Graph grOr ,Graph grToCreate ) {
+	private void computePaths ( ArrayList < Node > listNodeAdded , Graph grOr ,Graph grToCreate , boolean addEdge ) {
 		Dijkstra dijkstra = new Dijkstra(Element.EDGE, "length", "length") ; 
 		dijkstra.init(grOr);		
 		for ( Node n0Sim : grToCreate.getEachNode() ) {
 			Node n0 = n0Sim.getAttribute("nNet"); 
+			int dNo = n0.getDegree() ;
 			dijkstra.setSource(n0);
 			dijkstra.compute();
 			for ( Node n1Sim : grToCreate.getEachNode() ) {
@@ -83,7 +118,7 @@ public class staticSympleNetwork extends framework{
 					Iterator< ? extends Path > it = dijkstra.getAllPathsIterator(n1);
 					ArrayList<Path> listPath = new ArrayList<Path> () ;
 					int numPath = 0 ;
-					while ( it.hasNext() && numPath <= n0.getDegree() ) {
+					while ( it.hasNext() && numPath <= dNo) {
 						Path next = it.next();
 						listPath.add(next);
 						numPath++;
@@ -101,10 +136,30 @@ public class staticSympleNetwork extends framework{
 							pos++ ;
 						}
 						if ( goodPath ) {
-							if ( typeGraph.equals(mulGr))
-								choiceGoodPathMultiGr(dijkstra, grToCreate, n0Sim, n1Sim, n1, p);
-							else
-								choiceGoodPathSingleGr(dijkstra, grToCreate, n0Sim, n1Sim, n1, p);
+							
+							// add list of neighbors
+							ArrayList<Node> listNeig = n0Sim.getAttribute("listNeig");
+							if ( ! listNeig.contains(n1))
+								listNeig.add(n1);
+							n0Sim.addAttribute("listNeig", listNeig);
+							
+							// add list of paths from node to each neighbors
+							ArrayList<Path> listPathNode = n0Sim.getAttribute("listPath");
+							if ( ! listPathNode.contains(p))
+								listPathNode.add(p);
+							n0Sim.addAttribute("listPath", listPathNode);
+							
+							// add map neighbors - length				
+							Map<Node, Double> mapNeigLen = n0Sim.getAttribute("mapNeigLen");
+							if ( ! mapNeigLen.containsKey(n1))
+								mapNeigLen.put(n1, dijkstra.getPathLength(n1));
+							n0Sim.addAttribute("mapNeigLen", mapNeigLen);
+											
+							if ( addEdge) 
+								if ( typeGraph.equals(mulGr))
+									choiceGoodPathMultiGr(dijkstra, grToCreate, n0Sim, n1Sim, n1, p);
+								else
+									choiceGoodPathSingleGr(dijkstra, grToCreate, n0Sim, n1Sim, n1, p);
 						}
 					}
 				}		
@@ -112,6 +167,7 @@ public class staticSympleNetwork extends framework{
 		}
 	}
 	
+	// create multiGraph through add edge 
 	private void choiceGoodPathMultiGr ( Dijkstra dijkstra , Graph grToCreate , Node n0Sim , Node n1Sim , Node n1, Path p ) {
 		Edge e = createEdge(grToCreate, n0Sim, n1Sim);
 		if ( e!=null) {
@@ -119,7 +175,8 @@ public class staticSympleNetwork extends framework{
 			e.addAttribute("path", p);
 		}
 	}
-			
+	
+	// create SingleGraph through add edge 
 	private void choiceGoodPathSingleGr ( Dijkstra dijkstra , Graph grToCreate , Node n0Sim , Node n1Sim , Node n1, Path p ) {
 		Edge ed = null ;
 		double len = dijkstra.getPathLength(n1) ;

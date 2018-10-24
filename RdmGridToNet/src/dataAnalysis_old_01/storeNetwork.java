@@ -1,4 +1,4 @@
-package dataAnalysis;
+package dataAnalysis_old_01;
 
 import java.io.IOException;
 
@@ -6,7 +6,7 @@ import org.graphstream.graph.Graph;
 import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.stream.file.FileSinkDGS;
 
-public class storeNetwork extends analysis {
+public class storeNetwork extends analyze {
 	
 	private boolean run ;
 	private double stepToStore ;

@@ -1,4 +1,4 @@
-package dataAnalysis;
+package dataAnalysis_old_01;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class expCsv extends analysis {
+public class expCsv  {
 
 	public Map mapExp = new HashMap() ;
 

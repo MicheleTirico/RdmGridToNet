@@ -11,6 +11,7 @@ import javax.swing.JPanel;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
+import org.graphstream.graph.Path;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 import org.graphstream.ui.view.Viewer;
 
@@ -23,21 +24,17 @@ import RdmGridToNet.layerNet.typeSetupLayer;
 import RdmGridToNet.layerRd.typeComputeMaxLocal;
 import RdmGridToNet.layerRd.typeDiffusion;
 import RdmGridToNet.layerRd.typeInitializationMaxLocal;
-import RdmGridToNet.staticSympleNetwork.typeGraph;
-import dataAnalysis.analyze;
+import RdmGridToNet.symplifyNetwork.typeGraph;
 import dataAnalysis.analyzeNetwork;
-import dataAnalysis.handleFolder;
-import dataAnalysis.storeNetwork;
 import netViz.handleVizStype;
 import netViz.handleVizStype.stylesheet;
-import dataAnalysis.analyze.indicator;
 
 public class runAndAnalyze extends framework {
  
 	private static int sizeGrid = 200 ;
 	private static double Da = 0.2 , Db = 0.1 ;	
 	private static double g = 1, alfa = 2 , Ds = .1	, r = 2 ;
-	private static String  path = "D:\\ownCloud\\RdmGrid_exp" ;
+	private static String  path = "C:\\Users\\frenz\\ownCloud\\RdmGrid_exp\\test" ;
 
 	public static void main(String[] args) throws IOException {	
 		
@@ -53,46 +50,64 @@ public class runAndAnalyze extends framework {
 		lMl = new layerMaxLoc(true,true, typeInit.test, typeComp.wholeGrid, morphogen.b);
 		lMl.initializeLayer();
 		
-		lNet = new layerNet("net") ;
-		Graph netGraph = lNet.getGraph();
-		Graph graphLoc = lMl.getGraph() ;
+		lNet = new layerNet("net") ;	
+		Graph netGr = lNet.getGraph();
+		Graph locGr = lMl.getGraph() ;
 		
-		analyzeNetwork aN = new analyzeNetwork(false , netGraph, path, "analyzeNet", idPattern) ;		
-		aN.setIndicators(new ArrayList<indicator> ( Arrays.asList(	indicator.averageDegree,
-																	indicator.gammaIndex, 
-																	indicator.seedCount )));
-
-		aN.initAnalysis();
-		
-		storeNetwork sN = new storeNetwork(false, netGraph, path, "dsg", idPattern +"_net_") ;
-		sN.initStore();
+		symplifyNetwork simSingN = new symplifyNetwork(true , netGr);
 	
-		staticSympleNetwork sSn = new staticSympleNetwork(netGraph);
+		analyzeNetwork aNent = new analyzeNetwork(true , 10 , netGr, path, "analyzeNet", idPattern) ;		
+		aNent.setIndicators(new ArrayList<indicator> ( Arrays.asList(	
+				indicator.averageDegree,
+				indicator.gammaIndex, 
+				indicator.seedCount 
+//				indicator.normalDegreeDistribution 
+				)));
+		aNent.initAnalysis();
+		
+		storeNetwork sN = new storeNetwork(true,  10 , netGr, path, "dsg", idPattern +"_net_") ;
+		sN.initStore();
 		
 		lSeed = new layerSeed(g, alfa, Ds, r , morphogen.b );
 
 		initMultiCircle(1, 1, 50 , sizeGrid/2 ,sizeGrid/2, 2 , 4 );		
 		
 		lNet.setLengthEdges("length" , true );
+	
 		// setup viz netGraph
-		handleVizStype netViz = new handleVizStype( netGraph ,stylesheet.manual , "seed", 1) ;
-		netViz.setupIdViz(false , netGraph, 20 , "black");
-		netViz.setupDefaultParam (netGraph, "black", "black", 5 , 0.5 );
-		netViz.setupVizBooleanAtr(true, netGraph, "black", "red" , false , false ) ;
-		netViz.setupFixScaleManual( false , netGraph, sizeGrid , 0);
-		
-		netGraph.display(false);	
+		handleVizStype netViz = new handleVizStype( netGr ,stylesheet.manual , "seed", 1) ;
+		netViz.setupIdViz(false , netGr, 20 , "black");
+		netViz.setupDefaultParam (netGr, "black", "black", 5 , 0.5 );
+		netViz.setupVizBooleanAtr(true, netGr, "black", "red" , false , false ) ;
+		netViz.setupFixScaleManual( false , netGr, sizeGrid , 0);
+		netGr.display(false);	
 				
+		simSingN.init(typeGraph.singleGraph, true, true , 10 );
+		Graph simSingGr = simSingN.getGraph();
+
+		// analyze simplify network
+		String nameFileSim = "f_" + f + "_k_" + k ;
+		analyzeNetwork aNsimSingNet = new analyzeNetwork(true, 10 , simSingGr, path, "analyzeSimSingNet", nameFileSim );
+		aNsimSingNet.setIndicators(new ArrayList<indicator> ( Arrays.asList(	
+				indicator.averageDegree,
+				indicator.gammaIndex 
+//				indicator.normalDegreeDistribution 
+				)));
+		aNsimSingNet.initAnalysis();
+		
 		int t = 0 ; 
-		while ( t <= 50 && ! lSeed.getListSeeds().isEmpty()  ) {	
-			System.out.println("------------- step " +t);
+		while ( t <= 30 && ! lSeed.getListSeeds().isEmpty()  ) {	
+			System.out.println("---- step " +t +" --------------");
 			try { 
 				lRd.updateLayer();
 				lMl.updateLayer();
-				lNet.updateLayers(typeVectorField.slopeDistanceRadius , 0 , true , 15 );
-		
-				aN.computeIndicators(t);
+				lNet.updateLayers(typeVectorField.slopeDistanceRadius , 0 , true , 1 );
+
+				aNent.computeIndicators(t);
 				sN.storeDSGStep(t);
+				
+				simSingN.compute(t);
+				aNsimSingNet.computeIndicators(t);
 				t++;
 			}
 			catch (NullPointerException e) {
@@ -100,16 +115,22 @@ public class runAndAnalyze extends framework {
 			}
 		}
 		
-		aN.closeFileWriter();
+		aNent.closeFileWriter();
+		aNsimSingNet.closeFileWriter();
 		sN.closeStore();
-		sSn.init(typeGraph.multiGraph);
-		sSn.compute();
-		sSn.getGraph().display(false);
+		
+	
+		
+//		for ( Node n : sSn.getGraph().getEachNode() ) {
+//			ArrayList<Node> list = n.getAttribute("listNeig" ) ;
+//			ArrayList<Path> listPath = n.getAttribute("listPath" ) ;
+//			System.out.println(n + " " + n.getAttribute("dNet") + " " + list + " " + listPath.size());	
+//			System.out.println(n + " " + n.getAttribute("mapNeigLen"));
+//		}
 		
 		// only for viz
 		for ( seed s : lSeed.getListSeeds()) 	
-			s.getNode().setAttribute("seed", 1);	
-	
+			s.getNode().setAttribute("seed", 1);		
 	}
 
 	
