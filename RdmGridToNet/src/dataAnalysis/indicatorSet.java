@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,14 +24,15 @@ public class indicatorSet extends framework {
 
 	private Graph graphToAnalyze;
 	private String  path  ;
-	private FileWriter fwGI, fwAD,fwSC,fwNDD , fwPLD ;
+	private FileWriter fwGI, fwAD,fwSC,fwNDD , fwPLD , fwDD;
 	private int numFreqNND , numFreqPLD;
 	private double minValFreqNND , maxValFreqPLD;
-	
+	private analyzeNetwork aN ;
 	public enum indicator { 
 		seedCount("seedCount" , false ),
 		gammaIndex("gammaIndex", false ) , 
 		averageDegree("averageDegree", false ) ,
+		degreeDistribution ("degreeDistribution", true , 0,0,0) ,
 		normalDegreeDistribution ("normalDegreeDistribution", true , 0 , 0 , 0 ),
 		pathLengthDistribution("pathLengthDistribution", true , 0 , 0 , 0 );
 	
@@ -64,7 +66,7 @@ public class indicatorSet extends framework {
 			if ( isList) {
 				// System.out.println(maxVal + " " + minVal + " " + numFreq);
 				double gap = ( maxVal - minVal ) / numFreq ;
-				header = getId() + ";";
+				header = getId() + ";"; 
 				int x = 0 ;
 				while ( x < numFreq ) {
 					NumberFormat nf = NumberFormat.getNumberInstance();
@@ -77,14 +79,10 @@ public class indicatorSet extends framework {
 			}
 			else 
 				header = getId();
-		}
-		
-		
+		}	
 		public String getHeader ( ) {
 			return header;
 		}
-		
-		
 		public String getId ( ) {
 			return id ;
 		}
@@ -104,6 +102,7 @@ public class indicatorSet extends framework {
 	}
 	
 	public void setFw (indicator in) throws IOException {	
+		System.out.println(path); 
 		switch (in) {
 			case gammaIndex:
 				fwGI = new FileWriter(path , true);
@@ -120,6 +119,8 @@ public class indicatorSet extends framework {
 			case pathLengthDistribution :
 				fwPLD = new FileWriter(path,true) ;
 				break;
+			case degreeDistribution :
+				fwDD = new FileWriter(path, true) ;
 		}
 	}
 	
@@ -141,6 +142,9 @@ public class indicatorSet extends framework {
 			case pathLengthDistribution :
 				fw = fwPLD;
 				break; 
+			case degreeDistribution :
+				fw = fwDD ;
+				break ;
 		}
 		return fw ;
 	}
@@ -156,10 +160,13 @@ public class indicatorSet extends framework {
 		
 		switch (in) {
 			case normalDegreeDistribution:
-				val = getNDd( (int) freqParams[0] );
+				val = getNDD ((int) freqParams[0] );
 				break;
 			case pathLengthDistribution:
 				val = getPLD((int) freqParams[0] ,freqParams[1] ,freqParams[2] );
+				break ;
+			case degreeDistribution :
+				val = getDD ((int)freqParams[0] ) ;
 				break ;
 		}
 		System.out.println(graphToAnalyze + " "+ in.getId() + " "+ val);
@@ -210,8 +217,18 @@ public class indicatorSet extends framework {
 			return e / eMax ;
 	}
 	
+	// degree distribution 
+	private double[] getDD (  int numberFrequency  ) {
+		double [] vals = new double[numberFrequency] ;	
+		int[] degreeDistribution = Toolkit.degreeDistribution(graphToAnalyze);
+		for (int i = 0 ; i < degreeDistribution.length ; i++ )
+			vals[i] = (double) degreeDistribution[i];
+	
+		return vals ;
+	}
+	
 	// normal degree distribution 
-	private double[] getNDd (  int numberFrequency  ) {
+	private double[] getNDD (  int numberFrequency  ) {
 		double [] vals = new double[numberFrequency] ;	
 		int[] degreeDistribution = Toolkit.degreeDistribution(graphToAnalyze);
 		double nodeCount = graphToAnalyze.getNodeCount() ;
@@ -220,14 +237,13 @@ public class indicatorSet extends framework {
 				vals[i] = (double) degreeDistribution[i] / nodeCount ;		
 			} catch (ArrayIndexOutOfBoundsException e) {
 				break ; 
-			}
+			}	
 		return vals ;
 	}
+	
 	// path length distribution
-	private enum typeReturnFreq { header , vals};
 	private double[] getPLD (  int numberFrequency , double valMin , double valMax ) {
-		double [] vals = new double[numberFrequency] ,
-				headerVal = new double[numberFrequency];	
+		double [] vals = new double[numberFrequency] ;	
 
 		Map<Edge, ArrayList<Double>> mapEdgeLen = getMapEdgeValue(graphToAnalyze, "listLen");
 		ArrayList<Double> listLen = new ArrayList<Double>() ;
@@ -236,11 +252,10 @@ public class indicatorSet extends framework {
 			for ( double val : mapEdgeLen.get(e))
 				listLen.add(val);
 		
-		Map<Double, Double> map = new TreeMap<>(getMapFrequencyAss(listLen, 10 ,valMin , valMax)) ;
+		Map<Double, Double> map = new TreeMap<>(getMapFrequencyAss(listLen, numberFrequency ,valMin , valMax)) ;
 		int pos = 0 ;
 		for ( double key : map.keySet()) {
 			vals[pos] = map.get(key);
-			headerVal[pos] = key;
 			pos++;
 		}
 		return vals;

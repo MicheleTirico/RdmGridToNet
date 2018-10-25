@@ -1,6 +1,6 @@
 package RdmGridToNet;
 
-class cell extends framework {
+public class cell extends framework {
     private int X;
     private int Y;
     private double val1,val2 ;

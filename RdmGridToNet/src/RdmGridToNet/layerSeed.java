@@ -18,17 +18,20 @@ public class layerSeed extends framework {
 	public enum typeInitializationSeed {centerCellThMorp, test }
 
 	private static typeInitializationSeed typeInitializationSeed ;
-	
+	 
 	public layerSeed () {
-		this(0,0,0,0, null);	
+		this( 0, null);	
 	}
 
-	public layerSeed( double g , double alfa , double Ds, double r , morphogen m ) {
+	public layerSeed ( double r , morphogen m ) {
+		this.r = r ;		
+		this.m = m ; 
+	}
+	
+	public void setupGravityLayer ( double g , double alfa , double Ds ) {
 		this.g = g;
 		this.alfa = alfa ;
 		this.Ds = Ds ;
-		this.r = r ;		
-		this.m = m ; 
 	}
 	
 // INITIALIZATION SEED SET --------------------------------------------------------------------------------------------------------------------------

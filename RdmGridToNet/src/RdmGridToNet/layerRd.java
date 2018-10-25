@@ -405,5 +405,13 @@ public class layerRd extends framework   {
 	public double getKill ( ) {
 		return k;
 	}
+
+	public int[] getSizeGrid () {
+		return new int[] {numCellX, numCellY} ;
+	}
+	
+	public cell[][] getCells () {
+		return cells;
+	}
 }
 

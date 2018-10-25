@@ -16,7 +16,7 @@ public class storeNetwork extends analysis {
 		nameFileStart , nameFileStep ,
 					pathStartDSG , pathStepDSG ;
 	 
-	private static FileSinkDGS fsd = new FileSinkDGS();
+	private FileSinkDGS fsd = new FileSinkDGS();
 	
 	public storeNetwork ( ) throws IOException {
 		this(false , 0.0 , null, null, null, null);

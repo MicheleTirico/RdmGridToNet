@@ -13,18 +13,19 @@ public class analyzeNetwork  {
 	
 	private ArrayList<indicator> listIndicators = new ArrayList<indicator> ();
 	private Graph graphToAnalyze ;
-	private boolean run ;
+	private boolean run , isSim;
 	private double stepToAnalyze ;
 	private String 	header , nameFile  , path  ;
 	private handleFolder hF ;
 	private indicatorSet iS = new indicatorSet();
 	
 	public analyzeNetwork () throws IOException {
-		this(false ,0 ,null, null, null, null);
+		this(false ,false ,0 ,null, null, null, null);
 	}
 	
-	public analyzeNetwork (boolean run , double stepToAnalyze ,Graph graphToAnalyze, String path , String nameFolder , String nameFile ) throws IOException {
+	public analyzeNetwork (boolean run , boolean isSim, double stepToAnalyze ,Graph graphToAnalyze, String path , String nameFolder , String nameFile ) throws IOException {
 		this.run = run ;
+		this.isSim = isSim ;
 		this.stepToAnalyze = stepToAnalyze ;
 		this.graphToAnalyze = graphToAnalyze ;
 		this.path = path +"\\"+ nameFolder + "\\";
@@ -39,10 +40,10 @@ public class analyzeNetwork  {
 		if ( run )
 			for ( indicator in : listIndicators ) {
 				in.setId(in.toString());
-				iS.setPath(path +nameFile+"_"+ in + ".csv" );
+				iS.setPath(path +nameFile+ in + ".csv" );
 				iS.setFw(in);
 				in.setHeader();
-				header = in.getHeader();
+				header = in.getHeader(); 
 				expCsv.addCsv_header( iS.getFw(in), header ) ;
 			}
 	}
@@ -54,8 +55,7 @@ public class analyzeNetwork  {
 				FileWriter fw = iS.getFw(in) ; 
 				if ( in.getIsList() ) {					
 					double[] valArr = iS.getValueArr(in);
-					String[] valList = castArrValToString(valArr, t, (int) in.getFrequencyParameters()[0]);
-					System.out.println(in + " " + fw );
+					String[] valList = castArrValToString(valArr, t, (int) in.getFrequencyParameters()[0]); // System.out.println(in + " " + fw );
 					expCsv.writeLine(fw, Arrays.asList( valList ) , ';' ) ;		
 				}
 				else {
@@ -88,6 +88,11 @@ public class analyzeNetwork  {
 			for ( indicator in : listIndicators )
 				iS.getFw(in).close();
 	}		
+	
+// GET METHODS --------------------------------------------------------------------------------------------------------------------------------------
+	public boolean getIsSim ( ) {
+		return isSim ;
+	}
 		
 // SET METHODS --------------------------------------------------------------------------------------------------------------------------------------
 	public void setIndicators ( indicator indicator ){	
