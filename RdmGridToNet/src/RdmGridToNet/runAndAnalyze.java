@@ -15,6 +15,7 @@ import dataAnalysis.storeRd;
 import dataAnalysis.storeRd.whichMorpToStore;
 import netViz.handleVizStype;
 import netViz.handleVizStype.stylesheet;
+import viz.*;
 
 public class runAndAnalyze extends framework {
  
@@ -29,8 +30,9 @@ public class runAndAnalyze extends framework {
 							runAnalysisNet = false,
 							runAnalysisSimNet = false;
 
+	public static int getGridSize() { return sizeGrid; }
+
 	public static void main(String[] args) throws IOException {	
-		
 		// bucket set
 		bks = new bucketSet(1, 1, sizeGrid, sizeGrid);
 		bks.initializeBukets();
@@ -105,8 +107,11 @@ public class runAndAnalyze extends framework {
 	
 		netGr.display(false);	
 		
+		// setup RD viz
+		Viz viz = new Viz(lRd);
+
 		int t = 0 ; 
-		while ( t <= 50 && ! lSeed.getListSeeds().isEmpty()  ) {	
+		while ( t <= 1000 && ! lSeed.getListSeeds().isEmpty()  ) {	
 			System.out.println("---- step " +t +" --------------");
 			try { 
 				// compute layers
@@ -125,6 +130,9 @@ public class runAndAnalyze extends framework {
 				// analysis network
 				analNet.compute(t);
 				analSimNet.compute(t);
+
+				// RD viz
+				viz.step();
 
 				t++;
 			}
