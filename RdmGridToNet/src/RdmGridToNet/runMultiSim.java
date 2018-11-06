@@ -3,6 +3,8 @@ package RdmGridToNet;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.graphstream.graph.Graph;
 
@@ -17,32 +19,35 @@ import dataAnalysis.storeNetwork;
 import dataAnalysis.storeRd;
 import dataAnalysis.indicatorSet.indicator;
 import dataAnalysis.storeRd.whichMorpToStore;
+import viz.handleVizStype;
+import viz.handleVizStype.stylesheet;
 
 public class runMultiSim extends framework {
 	
 // SETUP PARAMETERS ---------------------------------------------------------------------------------------------------------------------------------
 	// common parameters
-	private static int stepToStore = 5 , 
-			stepToAnalyze = 5 ,
-			stepMax = 10 ;
-	
+	private static int stepToStore = 10 , 
+			stepToAnalyze = 10 ,
+			stepToPrint = 100 ,
+			stepMax = 5000 ;
+	 
 	// parameters multi sim 
-	private static  double incremKill = 0.3 , 
-			incremFeed = 0.3 ,
-			minFeed = 0 ,
-			maxFeed = 1 ,
-			minKill = 0 ,
-			maxKill = 1 ;
+	private static  double incremKill = 0.005 , 
+			incremFeed = 0.005 ,
+			minFeed = 0.005 ,
+			maxFeed = 0.005 ,
+			minKill = 0.01  ,
+			maxKill = 0.075 ;
 	
-	private static  String  path = "C:\\Users\\frenz\\ownCloud\\RdmGrid_exp\\test" ;
+	private static  String  path = "D:\\ownCloud\\RdmGrid_exp\\multiSim\\analysisNet\\increm_005" ;
 	
 	// store and analysis parameters 
-	private static boolean  runStoreRd = true ,
-			runStoreSimNet = true, 
+	private static boolean  runStoreRd = false ,
+			runStoreSimNet = false, 
 			runStoreNet = true ,
-			runSimNet = true , 
-			runAnalysisNet = true,
-			runAnalysisSimNet = true;
+			runSimNet = false , 
+			runAnalysisNet = true ,
+			runAnalysisSimNet = false ;
 	
 	// layer Rd
 	private static int sizeGridX = 200, 
@@ -68,7 +73,7 @@ public class runMultiSim extends framework {
 			radiusRd = 2 , 
 			radiusNet = 4 ;
 	
-	public static void main(String[] args) throws IOException {	
+	public static void main(String[] args) throws Exception {	
 		
 		for ( double f = minFeed ; f <= maxFeed ; f = f + incremFeed ) 
 			for ( double k = minKill ; k <= maxKill ; k = k + incremKill ) {
@@ -84,7 +89,7 @@ public class runMultiSim extends framework {
 				lRd.setGsParameters(f, k, Da, Db, tyDif );
 				
 				// layer max local
-				lMl = new layerMaxLoc(true,true, typeInit.test, typeComp.wholeGrid, m );
+				lMl = new layerMaxLoc(true,true, typeInit.test, typeComp.aroundNetGraph, m );
 				lMl.initializeLayer();
 				
 				// layer net
@@ -100,7 +105,6 @@ public class runMultiSim extends framework {
 				
 				NumberFormat nf = NumberFormat.getNumberInstance();
 				nf.setMaximumFractionDigits(3);
-				String rounded = nf.format(f);
 				
 				String nameFile = "f-"+ nf.format(f)+"_k-"+ nf.format(k)+"_";
 				System.out.println(nameFile);
@@ -126,6 +130,18 @@ public class runMultiSim extends framework {
 				analyzeNetwork analNet = new analyzeNetwork(runAnalysisNet, false ,stepToAnalyze, netGr, path, "analysisNet", nameFile);
 				indicator.normalDegreeDistribution.setFrequencyParameters(10, 0, 10);
 				indicator.degreeDistribution.setFrequencyParameters(10, 0, 10);
+				
+				Map map = new TreeMap<>();
+				
+				map.put("sizeGrid",  sizeGridX);
+				map.put("Da", Da);
+				map.put("Db", Db);				
+				map.put("f", f);
+				map.put("k", k);
+				map.put("numStartSeed",  numNodes);
+				map.put("stepStore" , stepToStore) ;
+				analNet.setupHeader(false, map);
+				
 				analNet.setIndicators(Arrays.asList(
 						indicator.seedCount ,
 						indicator.degreeDistribution,
@@ -142,12 +158,22 @@ public class runMultiSim extends framework {
 						indicator.pathLengthDistribution));
 				analSimNet.initAnalysis();
 
-			//	netGr.display(false);	
+				// setup viz netGraph
+				handleVizStype netViz = new handleVizStype( netGr ,stylesheet.manual , "seed", 1) ;
+				netViz.setupIdViz(false , netGr, 20 , "black");
+				netViz.setupDefaultParam (netGr, "black", "black", 5 , 0.5 );
+				netViz.setupVizBooleanAtr(true, netGr, "black", "red" , false , false ) ;
+				netViz.setupFixScaleManual( true , netGr, sizeGridX , 0);
+		//		netGr.display(false);	
 				
 				int t = 0 ; 
-				while ( t <= 50 && ! lSeed.getListSeeds().isEmpty()  ) {	
-					System.out.println("---- step " +t +" --------------");
-					try { 
+				while ( t <= stepMax && ! lSeed.getListSeeds().isEmpty()  ) {	
+					if ( t / (double) stepToPrint - (int)(t / (double) stepToPrint ) < 0.01) {
+//						System.out.println("---- step " +t +" --------------");
+//						System.out.println("numberMaxLo " + lMl.getNumMaxLoc());
+//						System.out.println("numberNodes "+ netGr.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
+					}
+		//			try { 
 						// compute layers
 						lRd.updateLayer(); 
 						lMl.updateLayer();
@@ -166,12 +192,14 @@ public class runMultiSim extends framework {
 						analSimNet.compute(t);
 
 						t++;
-					}
-					catch (NullPointerException e) {
-						break ;
-					}
+//					}
+//					catch (NullPointerException e) {
+//						e.printStackTrace();
+//						break ;
+//					}
 				}
 
+				System.out.println("step " + t + " seed " + lSeed.getListSeeds().size() + " node " + netGr.getNodeCount()+ "\n");
 				// close files
 				storeNet.closeStore();
 				storeSimNet.closeStore();

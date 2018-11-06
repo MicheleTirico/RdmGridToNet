@@ -16,7 +16,7 @@ public class layerMaxLoc extends framework {
 	public enum typeInit {test, // centreRd , allPointActive , noInizialization
 		};
 	
-	public enum typeComp {test, wholeGrid};
+	public enum typeComp {test, wholeGrid , aroundNetGraph };
 	private typeInit  typeInit ;
 	private typeComp typeComp ;
 	
@@ -44,17 +44,43 @@ public class layerMaxLoc extends framework {
 // COMPUTE LAYER ------------------------------------------------------------------------------------------------------------------------------------
 	public void updateLayer () {
 		if ( compute) {
-			System.out.println("numberMaxLo " + getNumMaxLoc());
+		//	System.out.println("numberMaxLo " + getNumMaxLoc());
 			switch (typeComp) {
 				case wholeGrid :
 					computeLayerWholeGrid();
 					break;
+				case aroundNetGraph :
+					computeLayerAroundNetGraph();
 				default:
 					break;
 			}
 		}
 		if ( vizLayer)
 			createGraph();
+	}
+	
+	private void computeLayerAroundNetGraph ( ) {
+		ArrayList<cell>  listCellToAdd = new ArrayList<cell>() ,
+				listCellToRemove = new ArrayList<cell>() ;
+		
+		for ( bucket b : bks.getListBucketNotEmpty() ) {
+			cell c = lRd.getCell(b);
+			double val = lRd.getValMorp(c, m , false);
+			double valTest = 0 ;
+			int ind = 0;
+			ArrayList<cell> listNeig = lRd.getListNeighbors(typeNeighbourhood.moore, c.getX(), c.getY()) ;
+			while( valTest < val && ind < listNeig.size()) {
+				valTest = lRd.getValMorp(listNeig.get(ind), m, false);
+				ind++;	
+			}
+			if ( ind == listNeig.size() && ! listMaxLocal.contains(c) ) 	
+				listCellToAdd.add(c);		
+			else 
+				listCellToRemove.add(c);	
+		}
+		
+		listCellToAdd.stream().forEach(c -> addMaxLocal(c));
+		listCellToRemove.stream().forEach(c -> removeMaxLocal(c));
 	}
 	
 	private void computeLayerWholeGrid () {

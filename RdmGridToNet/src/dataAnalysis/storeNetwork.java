@@ -46,7 +46,7 @@ public class storeNetwork extends analysis {
 		}
 	}
 	
-	public void storeDSGStep ( int t ) {
+	public void storeDSGStep ( int t )  throws Exception {
 		if ( run && t / stepToStore - (int)(t / stepToStore ) < 0.01)
 			graph.stepBegins(t);		
 	}

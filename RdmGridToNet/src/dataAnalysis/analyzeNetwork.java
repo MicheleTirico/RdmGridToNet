@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.graphstream.graph.Graph;
 import dataAnalysis.indicatorSet.indicator;;
@@ -13,9 +16,10 @@ public class analyzeNetwork  {
 	
 	private ArrayList<indicator> listIndicators = new ArrayList<indicator> ();
 	private Graph graphToAnalyze ;
-	private boolean run , isSim;
+	private boolean run , isSim , addTitleCSV;
 	private double stepToAnalyze ;
 	private String 	header , nameFile  , path  ;
+	private String[] keys , values  ;
 	private handleFolder hF ;
 	private indicatorSet iS = new indicatorSet();
 	
@@ -36,6 +40,40 @@ public class analyzeNetwork  {
 		}
 	}
 	
+	public void setupHeader_02 (boolean addTitleCSV , Map startParam ) {
+		this.addTitleCSV = addTitleCSV;	
+		keys = new String [startParam.size() + 1 ] ;
+		values = new String [startParam.size() + 1  ];
+		int pos = 0 ;
+		for ( Object key : startParam.keySet() ) {
+			keys[pos] = key.toString();
+			values[pos] = startParam.get(key).toString() ;
+			pos++ ;
+	 	}
+		keys[pos] = ";";
+		values[pos] = ";";
+	} 
+	
+	public void setupHeader (boolean addTitleCSV , Map startParam ) {
+		this.addTitleCSV = addTitleCSV;	
+		keys = new String [11] ;
+		values = new String [11];
+		
+		int pos = 0 ; 
+		for ( Object key : startParam.keySet() ) {
+			keys[pos] = key.toString();
+			values[pos] = startParam.get(key).toString() ;
+			pos++ ;
+			
+	 	}
+		while ( pos < 10 ) {
+			keys[pos] = "0";
+			values[pos] = "0";
+			pos++;
+		} 
+		keys[pos] = ";";
+		values[pos] = ";";
+	}
 	public void initAnalysis ( ) throws IOException {
 		if ( run )
 			for ( indicator in : listIndicators ) {
@@ -43,12 +81,20 @@ public class analyzeNetwork  {
 				iS.setPath(path +nameFile+ in + ".csv" );
 				iS.setFw(in);
 				in.setHeader();
+				FileWriter fw = iS.getFw(in) ; 
+				if ( addTitleCSV )
+					expCsv.addCsv_header( fw , in.toString() ) ;
+				if ( keys.length != 0 ) {
+					expCsv.writeLine(fw, Arrays.asList( keys ) , ';' ) ;	
+					expCsv.writeLine(fw, Arrays.asList( values ) , ';' ) ;		
+				}
+					
 				header = in.getHeader(); 
-				expCsv.addCsv_header( iS.getFw(in), header ) ;
+				expCsv.addCsv_header( fw , header ) ;
 			}
 	}
 	
-	public void compute (int t) throws IOException {
+	public void compute (int t) throws IOException , Exception {
 		if ( run &&  t / stepToAnalyze - (int)(t / stepToAnalyze ) < 0.01 ) 
 			for ( indicator in : listIndicators ) {
 				iS.setGraph(graphToAnalyze); 
@@ -65,7 +111,7 @@ public class analyzeNetwork  {
 			}
 	}
 		
-	public void compute () throws IOException {
+	public void compute () throws IOException , Exception {
 		if ( run  ) 
 			for ( indicator in : listIndicators ) {
 				iS.setGraph(graphToAnalyze); 
@@ -109,7 +155,7 @@ public class analyzeNetwork  {
 		int pos = 1 ;
 		listString[0] = Integer.toString(t) ; 
 		while ( pos< valArr.length ) {
-			listString[pos]= Double.toString(valArr[pos]);
+			listString[pos] = Double.toString(valArr[pos]);
 			pos++;
 		}
 		return listString ;

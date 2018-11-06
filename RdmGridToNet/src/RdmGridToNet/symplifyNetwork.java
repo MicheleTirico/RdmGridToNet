@@ -79,7 +79,7 @@ public class symplifyNetwork extends framework{
 
 	public void compute ( int t ) {
 		grToCreate.getEachNode().forEach(n -> grToCreate.removeNode(n));
-		if ( run && t / stepToAnalyze - (int)(t / stepToAnalyze ) < 0.01 ) { 	
+		if ( run && t / stepToAnalyze - (int)(t / stepToAnalyze ) < 0.01 ) {  	
 			ArrayList < Node > listNodeAdded  = computeNodes(addNode, netGr, grToCreate);	
 			computePaths(listNodeAdded, netGr, grToCreate, addEdge) ;
 		}
@@ -136,8 +136,7 @@ public class symplifyNetwork extends framework{
 								goodPath = false ;
 							pos++ ;
 						}
-						if ( goodPath ) {
-							
+						if ( goodPath ) {		
 							// add list of neighbors
 							ArrayList<Node> listNeig = n0Sim.getAttribute("listNeig");
 							if ( ! listNeig.contains(n1))
@@ -319,7 +318,7 @@ public class symplifyNetwork extends framework{
 	}
 	
 	// create Node
-	private Node createNode ( Graph gr , Node n) {		
+	private Node createNode ( Graph gr , Node n ) {		
 		double[] coord = GraphPosLengthUtils.nodePosition(n);	
 		idNode = Integer.toString(idNodeInt); 
 		Node newNode = gr.addNode(idNode);

@@ -211,10 +211,14 @@ public void initializationSeedCircle ( int numNodes , double radius ) {
 	
 	
 // FEEDBACK -----------------------------------------------------------------------------------------------------------------------------------------
-	public void setSeedInCell ( seed s , boolean setSeedInCell ) {
-		cell c = lRd.getCell(s);
-		c.setHasSeed(setSeedInCell);
+	public void setSeedInCell ( seed s , boolean setSeedInCell )  {
+		try {
+			cell c = lRd.getCell(s);
+			c.setHasSeed(setSeedInCell);
+		} catch (NullPointerException e) {
+		}
 	}
+		
 		
 // UPDATE LAYER SEED --------------------------------------------------------------------------------------------------------------------------------	
 	public void updateLayer() {

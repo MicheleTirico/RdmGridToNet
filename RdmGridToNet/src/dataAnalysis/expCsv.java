@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,12 @@ public class expCsv extends analysis {
     public static void writeLine(Writer w, List<String> values, char separators) throws IOException {
         writeLine(w, values, separators, ' ');
     } 
+    
+    public static void writeLine(Writer w, String[] values, char separators) throws IOException {
+    	List<String> list = Arrays.asList(values);
+        writeLine(w, list, separators, ' ');
+    }
+    
 
     public static void addCsv_header(Writer w, String header ) throws IOException  {
         
@@ -34,7 +41,7 @@ public class expCsv extends analysis {
 
         String result = value;
         
-        if (result.contains("\"")) 
+        if (result.contains("\""))  
             result = result.replace("\"", "\"\"");
         
         return result;

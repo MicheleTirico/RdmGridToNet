@@ -60,11 +60,11 @@ public class layerNet extends framework {
 	}
 		
 	public void updateLayers ( typeVectorField typeVectorField ,  int depthMax  , boolean createSeed , double minDistSeed   ) { 
-		System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
+	//	System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
 	
 		Dijkstra dijkstra = new Dijkstra(Element.EDGE, "length", "length") ; 
 		ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); 
-		
+		 
 		if (createSeed) 
 			createSeed(minDistSeed);
 		
@@ -103,9 +103,19 @@ public class layerNet extends framework {
 				
 			// compute length vector
 			double inten = Math.min(0.1 , getDistGeom(nodeS, nodeF) ) ;
+			if ( inten == 0 ) {
+				listSeedsToRemove.add(s);
+				continue ;
+			}
 				
 			// get node in buckets near nodeF
-			ArrayList <Node> listNodeInBks = new ArrayList<Node>(bks.getNodesInRadius(nodeF, 1)) ;	
+			ArrayList <Node> nodeinRadius = bks.getNodesInRadius(nodeF, 1) ;
+			if ( nodeinRadius == null ) {
+				listSeedsToRemove.add(s) ;
+				continue ;
+			}
+			ArrayList <Node> listNodeInBks = new ArrayList<Node>(nodeinRadius) ;	
+			
 			Node nodeNear = null ;
 			
 			// nearest node to nodeF

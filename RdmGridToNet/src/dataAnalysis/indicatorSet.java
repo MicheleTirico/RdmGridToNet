@@ -63,8 +63,7 @@ public class indicatorSet extends framework {
 		}
 		
 		public void setHeader ( ) {
-			if ( isList) {
-				// System.out.println(maxVal + " " + minVal + " " + numFreq);
+			if ( isList) {		// System.out.println(maxVal + " " + minVal + " " + numFreq);
 				double gap = ( maxVal - minVal ) / numFreq ;
 				header = getId() + ";"; 
 				int x = 0 ;
@@ -102,7 +101,7 @@ public class indicatorSet extends framework {
 	}
 	
 	public void setFw (indicator in) throws IOException {	
-		System.out.println(path); 
+		// System.out.println(path); 
 		switch (in) {
 			case gammaIndex:
 				fwGI = new FileWriter(path , true);
@@ -168,8 +167,7 @@ public class indicatorSet extends framework {
 			case degreeDistribution :
 				val = getDD ((int)freqParams[0] ) ;
 				break ;
-		}
-		System.out.println(graphToAnalyze + " "+ in.getId() + " "+ val);
+		} //	System.out.println(graphToAnalyze + " "+ in.getId() + " "+ val);
 		return val ;
 	}
 
@@ -185,8 +183,7 @@ public class indicatorSet extends framework {
 			case averageDegree :
 				val = getAverageDegree();
 				break ;	
-		}
-		System.out.println(graphToAnalyze + " "+ in.getId() + " "+ val);
+		} //	System.out.println(graphToAnalyze + " "+ in.getId() + " "+ val);
 		return val ;
 	}
 
@@ -221,9 +218,11 @@ public class indicatorSet extends framework {
 	private double[] getDD (  int numberFrequency  ) {
 		double [] vals = new double[numberFrequency] ;	
 		int[] degreeDistribution = Toolkit.degreeDistribution(graphToAnalyze);
-		for (int i = 0 ; i < degreeDistribution.length ; i++ )
-			vals[i] = (double) degreeDistribution[i];
-	
+		for (int i = 0 ; i < degreeDistribution.length ; i++ ) 
+			try {
+				vals[i] = (double) degreeDistribution[i];
+			} catch (ArrayIndexOutOfBoundsException e) {
+		}		
 		return vals ;
 	}
 	

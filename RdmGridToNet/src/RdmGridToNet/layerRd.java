@@ -387,15 +387,27 @@ public class layerRd extends framework   {
 			e.printStackTrace();
 			return null ;
 		}
-		}
+	}
 	
 	public cell getCell ( Node n ) {
 		double[] coords = GraphPosLengthUtils.nodePosition(n);	
 		return cells[(int) Math.floor(coords[0])][(int) Math.floor(coords[1])] ;
 	}
 
+	public cell getCell ( bucket b ) {
+		try {
+			return  cells[b.getX()][b.getY()]; 
+		} catch (ArrayIndexOutOfBoundsException e) {
+			return null ;
+		}
+	}
+
 	public cell getCell ( seed s ) {
-		return cells[(int) Math.floor(s.getX() )][(int) Math.floor(s.getY() )] ;
+		try {
+			return cells[(int) Math.floor(s.getX() )][(int) Math.floor(s.getY() )] ;
+		} catch (ArrayIndexOutOfBoundsException e) {
+			return null ;
+		}
 	}
 		
 	public double getFeed ( ) {
