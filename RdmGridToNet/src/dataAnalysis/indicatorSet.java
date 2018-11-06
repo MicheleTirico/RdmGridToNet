@@ -19,6 +19,7 @@ import org.graphstream.graph.Node;
 import org.graphstream.graph.Path;
 
 import RdmGridToNet.framework;
+import dataAnalysis.indicatorSet.indicator;
 
 public class indicatorSet extends framework {
 
@@ -28,6 +29,7 @@ public class indicatorSet extends framework {
 	private int numFreqNND , numFreqPLD;
 	private double minValFreqNND , maxValFreqPLD;
 	private analyzeNetwork aN ;
+	
 	public enum indicator { 
 		seedCount("seedCount" , false ),
 		gammaIndex("gammaIndex", false ) , 
@@ -66,20 +68,19 @@ public class indicatorSet extends framework {
 			if ( isList) {		// System.out.println(maxVal + " " + minVal + " " + numFreq);
 				double gap = ( maxVal - minVal ) / numFreq ;
 				header = getId() + ";"; 
-				int x = 0 ;
+				int x = 1 ;
 				while ( x < numFreq ) {
 					NumberFormat nf = NumberFormat.getNumberInstance();
 					nf.setMaximumFractionDigits(1);
-					String rounded = nf.format(gap * x );
+					String rounded = nf.format(gap * x  );
 					header = header + rounded + ";";
-					x++ ;
-					
+					x++ ;			
 				}
 			}
 			else 
 				header = getId();
 		}	
-		public String getHeader ( ) {
+		public String getHeader ( ) { 
 			return header;
 		}
 		public String getId ( ) {
@@ -156,7 +157,7 @@ public class indicatorSet extends framework {
 	public double[] getValueArr ( indicator in ) {
 		double[] val = null ;
 		double[] freqParams = in.getFrequencyParameters();
-		
+		 
 		switch (in) {
 			case normalDegreeDistribution:
 				val = getNDD ((int) freqParams[0] );

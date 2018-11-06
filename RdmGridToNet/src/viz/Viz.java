@@ -23,11 +23,11 @@ public class Viz extends JFrame {
 	protected JPanel canvas;
 
 	public Viz(layerRd lrd) {
-		int size = runAndAnalyze.getGridSize();
+		int[] size = lrd.getSizeGrid();
 
 		lRd = lrd;
 //		iRd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration().createCompatibleImage(size, size);
-		iRd = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+		iRd = new BufferedImage(size[0], size[1], BufferedImage.TYPE_INT_ARGB);
 		gfx = iRd.createGraphics();
 
 		canvas = new RDPanel(iRd);
@@ -35,7 +35,7 @@ public class Viz extends JFrame {
 		setLayout(new BorderLayout());
 		add(canvas, BorderLayout.CENTER);
 		pack();
-		setSize(new Dimension(getInsets().right + getInsets().left + size, getInsets().top + getInsets().bottom + size));
+		setSize(new Dimension(getInsets().right + getInsets().left + size[0], getInsets().top + getInsets().bottom + size[1]));
 		setVisible(true);
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -46,7 +46,7 @@ public class Viz extends JFrame {
 		drawImage();
 	}
 
-	protected void renderImage() {
+	protected void renderImage() { 
 		int size = iRd.getWidth();
 
 		assert(lRd.getSizeGrid()[0] == size && lRd.getSizeGrid()[1] == size);

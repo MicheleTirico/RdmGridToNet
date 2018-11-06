@@ -23,19 +23,16 @@ import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 
 import graphstream_dev_io_test.graphstreamReadGraph;
+import netViz.netVizTest;
 
 public class symplifyNetwork extends framework{
 
-	private Graph stSimGr = new SingleGraph ( "stSimNet" ),
-					netGr = new SingleGraph ( "net" ) ,
-					mulGr = new MultiGraph  ( "multiGr") ,
-					grToCreate = null ;
-	
+	private Graph simGr = new SingleGraph ( "simGr" ),
+				  netGr = new SingleGraph ( "netGr" ) ;
+
 	private int idNodeInt = 0 , idEdgeInt = 0 ;
 	private String idNode , idEdge ; 
-	public enum typeGraph { multiGraph, singleGraph };
-	private typeGraph typeGraph ;
-	private boolean run , addNode , addEdge;
+	private boolean run ;
 	private double stepToAnalyze ;
 	
 	public symplifyNetwork() {
@@ -47,171 +44,89 @@ public class symplifyNetwork extends framework{
 		this.netGr = netGr ;
 	}
 	
-	public void init(typeGraph typeGraph, boolean addNode , boolean addEdge) {
-		this.typeGraph = typeGraph ;
-		this.addNode = addNode ;
-		this.addEdge = addEdge ;
-		if ( typeGraph.equals(typeGraph.multiGraph) )
-			grToCreate = mulGr ;
-		else 
-			grToCreate = stSimGr;
+	public void init( double stepToAnalyze ) {
+		this.stepToAnalyze = stepToAnalyze  ;
 	}
 	
-	public void init(typeGraph typeGraph, boolean addNode , boolean addEdge, double stepToAnalyze) {
-		this.typeGraph = typeGraph ;
-		this.addNode = addNode ;
-		this.addEdge = addEdge ;
-		this.stepToAnalyze = stepToAnalyze ;
-		if ( typeGraph.equals(typeGraph.multiGraph) )
-			grToCreate = mulGr ;
-		else 
-			grToCreate = stSimGr;
-	}
-	
-// COMPUTE METHODS ----------------------------------------------------------------------------------------------------------------------------------	
-	public void compute ( ) {
-		grToCreate.getEachNode().forEach(n -> grToCreate.removeNode(n));
-		if ( run ) { 
-			ArrayList < Node > listNodeAdded  = computeNodes(addNode, netGr, grToCreate);	
-			computePaths(listNodeAdded, netGr, grToCreate, addEdge) ;
-		}
-	}
-
-	public void compute ( int t ) {
-		grToCreate.getEachNode().forEach(n -> grToCreate.removeNode(n));
-		if ( run && t / stepToAnalyze - (int)(t / stepToAnalyze ) < 0.01 ) {  	
-			ArrayList < Node > listNodeAdded  = computeNodes(addNode, netGr, grToCreate);	
-			computePaths(listNodeAdded, netGr, grToCreate, addEdge) ;
-		}
-	}
-	
-	private ArrayList<Node> computeNodes ( boolean addNode , Graph grOr ,Graph grToCreate ) {
-		ArrayList<Node> listNodeToAdd = new ArrayList<Node> () ;
-		for ( Node nNet :grOr.getEachNode() ) {
-			int d = nNet.getDegree();
-			if ( d != 2 ) {
-				listNodeToAdd.add(nNet);
-				if ( addNode ) {
-					Node nSim = createNode(grToCreate, nNet);
-					nSim.addAttribute("nNet", nNet);
-					nNet.addAttribute("nSim", nSim);
-					nSim.addAttribute("dNet", d);
-					nSim.addAttribute("listNeig", new ArrayList<Node> () );
-					nSim.addAttribute("listPath", new ArrayList<Path> ());
-					nSim.addAttribute("mapNeigLen", new HashMap<Node, Double>());
+// COMPUTE METHODS ----------------------------------------------------------------------------------------------------------------------------------		
+	public void compute_addArrayLen ( ) {
+		if ( run ) {	
+			for ( Node nNet : netGr.getEachNode()) {
+				Node nSim = createNode(simGr, nNet);
+				nSim.addAttribute("nNet", nNet);
+				nNet.setAttribute("nSim", nSim);
+			}
+			for ( Edge eNet : netGr.getEachEdge()) {
+				Node n0 = eNet.getNode0() , n1 = eNet.getNode1();
+				Edge e = createEdge(simGr, n0.getAttribute("nSim"), n1.getAttribute("nSim") ) ;
+				double[] lens = new double[2] ;
+				lens[0] = getDistGeom(n0, n1);
+				e.addAttribute("lens", lens);
+			}
+			for ( Node nNet : netGr.getEachNode() ) {
+				Node nSim = nNet.getAttribute("nSim") ;
+				int d = nSim.getDegree() ;
+				if ( d == 2 ) {
+					Node[] arrNeigs = getArrayNeighbors(nSim) ;
+					Node n0 = arrNeigs[0],
+							n1 = arrNeigs[1];
+					
+					double len0 = getDistGeom(nSim, n0),
+							len1 = getDistGeom(nSim, n1);
+					
+					Edge e = createEdge(simGr, n0 , n1 , len0 + len1 ,  true ) ;		
+					simGr.removeNode(nSim);
 				}
-			}
-		}
-		return listNodeToAdd ;
-	}
-	
-	private void computePaths ( ArrayList < Node > listNodeAdded , Graph grOr ,Graph grToCreate , boolean addEdge ) {
-		Dijkstra dijkstra = new Dijkstra(Element.EDGE, "length", "length") ; 
-		dijkstra.init(grOr);		
-		for ( Node n0Sim : grToCreate.getEachNode() ) {
-			Node n0 = n0Sim.getAttribute("nNet"); 
-			int dNo = n0.getDegree() ;
-			dijkstra.setSource(n0);
-			dijkstra.compute();
-			for ( Node n1Sim : grToCreate.getEachNode() ) {
-				if ( !n0Sim.equals(n1Sim)) {
-					Node n1 = n1Sim.getAttribute("nNet");		
-					Iterator< ? extends Path > it = dijkstra.getAllPathsIterator(n1);
-					ArrayList<Path> listPath = new ArrayList<Path> () ;
-					int numPath = 0 ;
-					while ( it.hasNext() && numPath <= dNo) {
-						Path next = it.next();
-						listPath.add(next);
-						numPath++;
-					}
-					for ( Path p : listPath ) {
-						List<Node> nodePath = p.getNodePath();
-						nodePath.remove(n0);
-						nodePath.remove(n1);
-						boolean goodPath = true ;
-						int pos = 0 ;
-						while ( goodPath == true && pos < nodePath.size() ) {
-							Node n = nodePath.get(pos) ;
-							if ( listNodeAdded.contains(n) )
-								goodPath = false ;
-							pos++ ;
-						}
-						if ( goodPath ) {		
-							// add list of neighbors
-							ArrayList<Node> listNeig = n0Sim.getAttribute("listNeig");
-							if ( ! listNeig.contains(n1))
-								listNeig.add(n1);
-							n0Sim.addAttribute("listNeig", listNeig);
-							
-							// add list of paths from node to each neighbors
-							ArrayList<Path> listPathNode = n0Sim.getAttribute("listPath");
-							if ( ! listPathNode.contains(p))
-								listPathNode.add(p);
-							n0Sim.addAttribute("listPath", listPathNode);
-							
-							// add map neighbors - length				
-							Map<Node, Double> mapNeigLen = n0Sim.getAttribute("mapNeigLen");
-							if ( ! mapNeigLen.containsKey(n1))
-								mapNeigLen.put(n1, dijkstra.getPathLength(n1));
-							n0Sim.addAttribute("mapNeigLen", mapNeigLen);
-											
-							if ( addEdge) 
-								if ( typeGraph.equals(mulGr))
-									choiceGoodPathMultiGr(dijkstra, grToCreate, n0Sim, n1Sim, n1, p);
-								else
-									choiceGoodPathSingleGr(dijkstra, grToCreate, n0Sim, n1Sim, n1, p);
-						}
-					}
-				}		
-			}
+			}	
 		}
 	}
 	
-	// create multiGraph through add edge 
-	private void choiceGoodPathMultiGr ( Dijkstra dijkstra , Graph grToCreate , Node n0Sim , Node n1Sim , Node n1, Path p ) {
-		Edge e = createEdge(grToCreate, n0Sim, n1Sim);
-		if ( e!=null) {
-			e.addAttribute("length", dijkstra.getPathLength(n1) );
-			e.addAttribute("path", p);
+	public void compute (  ) {
+		if ( run ) {	
+			for ( Node nNet : netGr.getEachNode()) {
+				Node nSim = createNode(simGr, nNet);
+				nSim.addAttribute("nNet", nNet);
+				nNet.setAttribute("nSim", nSim);
+			}
+			for ( Edge eNet : netGr.getEachEdge()) {
+				Node n0 = eNet.getNode0() , n1 = eNet.getNode1();
+				Edge e = createEdge(simGr, n0.getAttribute("nSim"), n1.getAttribute("nSim") ) ;
+				
+				ArrayList<Double> listLen = new ArrayList<Double>(Arrays.asList(getDistGeom(n0, n1))) ;
+				e.addAttribute("listLen", listLen);
+			}
+			for ( Node nNet : netGr.getEachNode() ) {
+				Node nSim = nNet.getAttribute("nSim") ;
+				if ( nSim.getDegree() == 2 ) { 
+					Node[] arrNeigs = getArrayNeighbors(nSim) ;
+					Node n0 = arrNeigs[0],
+							n1 = arrNeigs[1];
+					
+					double len = getDistGeom(nSim, n0) + getDistGeom(nSim, n1);
+					
+					Edge e = null ;
+					try {
+						idEdge = Integer.toString(idEdgeInt);
+						e = simGr.addEdge(idEdge, n0, n1);
+						ArrayList<Double> listLen = new ArrayList<Double>( Arrays.asList(len)) ;
+						e.addAttribute("listLen", listLen);
+						idEdgeInt++;
+					} catch (EdgeRejectedException ex) {
+						e = getEdgeBetweenNodes(n0, n1);
+						ArrayList<Double> listLen = e.getAttribute("listLen");
+						listLen.add(getDistGeom(n0, n1));
+						e.addAttribute("listLen", listLen);
+					}	
+					simGr.removeNode(nSim);
+				}
+			}	
 		}
 	}
 	
-	// create SingleGraph through add edge 
-	private void choiceGoodPathSingleGr ( Dijkstra dijkstra , Graph grToCreate , Node n0Sim , Node n1Sim , Node n1, Path p ) {
-		Edge ed = null ;
-		double len = dijkstra.getPathLength(n1) ;
-		Map<Path,Double>  mapPathLen = new HashMap<Path,Double>();
-		Map<List<Node>,Double>  mapNodePathLen = new HashMap<List<Node> , Double>();
-		ArrayList<Double> listLen = new ArrayList<Double>();
-		
-		ed = createEdge(grToCreate, n0Sim, n1Sim);	
-		if ( ed == null ) {
-			ed = getEdgeBetweenNodes(n0Sim, n1Sim);
-			mapPathLen = ed.getAttribute("pathLen");
-			mapNodePathLen = ed.getAttribute("nodePathLen");
-			listLen = ed.getAttribute("listLen");
-			if ( mapPathLen == null ) {
-				mapPathLen = new HashMap<Path,Double>();
-				mapNodePathLen = new HashMap<List<Node> , Double>(); 
-				listLen = new ArrayList<Double> () ;
-			}
-		}
-		else {
-			mapPathLen = ed.getAttribute("pathLen");
-			mapNodePathLen = ed.getAttribute("mapNodePathLen") ;
-			listLen = ed.getAttribute("lisLen"); 
-			if ( mapPathLen == null )
-				mapPathLen = new HashMap<Path,Double>();
-			if ( mapNodePathLen == null )
-				mapNodePathLen = new HashMap<List<Node>,Double>();
-			if ( listLen == null )
-				listLen = new ArrayList<Double>();
-		}
-		if ( ! mapPathLen.containsValue(len)) {
-			mapPathLen.put(p, len);
-			ed.addAttribute("pathLen", mapPathLen) ;
-			listLen.add(len);
-			ed.addAttribute("listLen", listLen);
+	public void compute ( int t ) {
+		if ( run && t / stepToAnalyze - (int)(t / stepToAnalyze ) < 0.01 ) {  
+			simGr.getEachNode().forEach(n -> simGr.removeNode(n));
+			compute () ;
 		}
 	}
 	
@@ -267,6 +182,18 @@ public class symplifyNetwork extends framework{
 		listNeig.remove(node) ; 
 		return listNeig ;
 	}
+	
+	private Node[] getArrayNeighbors ( Node node ) { 
+		Node[] arr = new Node[node.getDegree()];
+		Iterator<Node> iter = node.getNeighborNodeIterator() ;	
+		int pos = 0 ;
+		while (iter.hasNext()) {		 
+			arr[pos] = iter.next() ; 
+			pos ++ ;
+		} 
+		return arr ;
+	}
+	
 
 	public Node getNearestNodeInPath (Graph gr , Node source ) {
 		Iterator<? extends Node> k = source.getDepthFirstIterator();
@@ -301,8 +228,16 @@ public class symplifyNetwork extends framework{
 	
 	// get Graph
 	public Graph getGraph ( ) {
-		return grToCreate;
+		return simGr;
 	}
+	
+	
+	public void addIfNotContain ( ArrayList list , Object obj ) {
+		if ( !list.contains(obj))
+			list.add(obj);
+	}
+	
+
 	
 // CREATE METHODS -----------------------------------------------------------------------------------------------------------------------------------
 	// create edge
@@ -313,9 +248,29 @@ public class symplifyNetwork extends framework{
 			idEdgeInt++;
 			return e ;
 		} catch (EdgeRejectedException e) {
+
 			return null ;
 		}
 	}
+	
+	private Edge createEdge ( Graph gr ,Node n0 , Node n1 , double len0 , boolean setLen) {		
+		Edge e = null ;
+		try {
+			idEdge = Integer.toString(idEdgeInt);
+			e = gr.addEdge(idEdge, n0, n1);
+			double [] lens = new double[2];
+			lens[0] = len0;
+			e.addAttribute("lens", lens);
+			idEdgeInt++;
+		} catch (EdgeRejectedException ex) {
+			e = getEdgeBetweenNodes(n0, n1);
+			double [] lens = e.getAttribute("lens");
+			lens[1] = getDistGeom(n0, n1);
+			e.addAttribute("lens", lens);
+		}
+		return e ;
+	}
+	
 	
 	// create Node
 	private Node createNode ( Graph gr , Node n ) {		
@@ -325,6 +280,22 @@ public class symplifyNetwork extends framework{
 		newNode.addAttribute("xyz", coord[0],coord[1] ,0);	
 		idNodeInt++ ;
 		return newNode ;
+	}
+	
+	private Node createNode ( Graph gr , Node n , ArrayList<Node> nodesAlreadyExist ) {		
+		if ( ! nodesAlreadyExist.contains(n) ) {
+			double[] coord = GraphPosLengthUtils.nodePosition(n);	
+			idNode = Integer.toString(idNodeInt); 
+			Node newNode = gr.addNode(idNode);
+			newNode.addAttribute("xyz", coord[0],coord[1] ,0);	
+			newNode.addAttribute("nodeNetGr", n);
+			n.addAttribute("nodeSimGr", newNode);
+			idNodeInt++ ;
+			return newNode ;
+		}
+		else 
+			return n.getAttribute("nodeSimGr");
+		
 	}
 
 }

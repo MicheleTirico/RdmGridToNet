@@ -20,18 +20,19 @@ public class layerSeed extends framework {
 	private static typeInitializationSeed typeInitializationSeed ;
 	 
 	public layerSeed () {
-		this( 0, null);	
+		this( 0, null , 2);	
 	}
 
-	public layerSeed ( double r , morphogen m ) {
+	public layerSeed ( double r , morphogen m , double alfa) {
 		this.r = r ;		
 		this.m = m ; 
+		this.alfa = alfa ;
 	}
 	
 	public void setupGravityLayer ( double g , double alfa , double Ds ) {
 		this.g = g;
 		this.alfa = alfa ;
-		this.Ds = Ds ;
+		this.Ds = Ds ; 
 	}
 	
 // INITIALIZATION SEED SET --------------------------------------------------------------------------------------------------------------------------

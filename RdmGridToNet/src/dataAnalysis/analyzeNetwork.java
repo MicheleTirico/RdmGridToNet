@@ -1,5 +1,6 @@
 package dataAnalysis;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ public class analyzeNetwork  {
 	private String 	header , nameFile  , path  ;
 	private String[] keys , values  ;
 	private handleFolder hF ;
-	private indicatorSet iS = new indicatorSet();
+	private indicatorSet iS = new indicatorSet(); 
 	
 	public analyzeNetwork () throws IOException {
 		this(false ,false ,0 ,null, null, null, null);
@@ -62,7 +63,7 @@ public class analyzeNetwork  {
 		int pos = 0 ; 
 		for ( Object key : startParam.keySet() ) {
 			keys[pos] = key.toString();
-			values[pos] = startParam.get(key).toString() ;
+			values[pos] = startParam.get(key).toString();
 			pos++ ;
 			
 	 	}
@@ -78,13 +79,21 @@ public class analyzeNetwork  {
 		if ( run )
 			for ( indicator in : listIndicators ) {
 				in.setId(in.toString());
-				iS.setPath(path +nameFile+ in + ".csv" );
+				String pathFile = path +nameFile+ in + ".csv" ;
+				
+				// handle file if exist 
+				File f = new File(pathFile); 
+				if ( f.exists() )  
+					f.delete();
+	
+				// create new file 
+				iS.setPath(pathFile);		
 				iS.setFw(in);
 				in.setHeader();
 				FileWriter fw = iS.getFw(in) ; 
 				if ( addTitleCSV )
 					expCsv.addCsv_header( fw , in.toString() ) ;
-				if ( keys.length != 0 ) {
+				if ( keys.length != 0 ) { 
 					expCsv.writeLine(fw, Arrays.asList( keys ) , ';' ) ;	
 					expCsv.writeLine(fw, Arrays.asList( values ) , ';' ) ;		
 				}

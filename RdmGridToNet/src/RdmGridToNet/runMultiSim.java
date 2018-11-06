@@ -1,6 +1,5 @@
 package RdmGridToNet;
 
-import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Map;
@@ -8,19 +7,17 @@ import java.util.TreeMap;
 
 import org.graphstream.graph.Graph;
 
-import RdmGridToNet.framework.morphogen;
 import RdmGridToNet.framework.typeVectorField;
 import RdmGridToNet.layerMaxLoc.typeComp;
 import RdmGridToNet.layerMaxLoc.typeInit;
 import RdmGridToNet.layerRd.typeDiffusion;
-import RdmGridToNet.symplifyNetwork.typeGraph;
 import dataAnalysis.analyzeNetwork;
 import dataAnalysis.storeNetwork;
 import dataAnalysis.storeRd;
 import dataAnalysis.indicatorSet.indicator;
 import dataAnalysis.storeRd.whichMorpToStore;
-import viz.handleVizStype;
-import viz.handleVizStype.stylesheet;
+import netViz.handleVizStype;
+import netViz.handleVizStype.stylesheet;
 
 public class runMultiSim extends framework {
 	
@@ -35,19 +32,19 @@ public class runMultiSim extends framework {
 	private static  double incremKill = 0.005 , 
 			incremFeed = 0.005 ,
 			minFeed = 0.005 ,
-			maxFeed = 0.005 ,
-			minKill = 0.01  ,
-			maxKill = 0.075 ;
-	
-	private static  String  path = "D:\\ownCloud\\RdmGrid_exp\\multiSim\\analysisNet\\increm_005" ;
+			maxFeed = 0.081 , 
+			minKill = 0.005  ,
+			maxKill = 0.081 ;
+	 
+	private static  String  path = "D:\\ownCloud\\RdmGrid_exp\\multiSim_02\\increm_005" ;
 	
 	// store and analysis parameters 
 	private static boolean  runStoreRd = false ,
-			runStoreSimNet = false, 
-			runStoreNet = true ,
-			runSimNet = false , 
+			runStoreSimNet = true  , 
+			runStoreNet = true  ,
+			runSimNet = true , 
 			runAnalysisNet = true ,
-			runAnalysisSimNet = false ;
+			runAnalysisSimNet = true ;
 	
 	// layer Rd
 	private static int sizeGridX = 200, 
@@ -65,7 +62,8 @@ public class runMultiSim extends framework {
 	// layer seed and vector field
 	private static morphogen m = morphogen.b;
 	private static double r = 2,
-			minDistSeed = 1 ;
+			minDistSeed = 1 ,
+			alfa = 2 ;
 	private static typeVectorField tvf = typeVectorField.slopeDistanceRadius;
 	
 	// initialize circle seeds
@@ -98,7 +96,7 @@ public class runMultiSim extends framework {
 				Graph netGr = lNet.getGraph();
 				
 				// layer seed
-				lSeed = new layerSeed( r , morphogen.b );
+				lSeed = new layerSeed( r , morphogen.b , alfa );
 		
 				// initialize network and seed
 				initMultiCircle(perturVal0 , perturVal1 , numNodes , sizeGridX/2 ,sizeGridY/2, radiusRd, radiusNet );		
@@ -115,7 +113,7 @@ public class runMultiSim extends framework {
 				
 				// Initialize simplify network
 				symplifyNetwork simNet = new symplifyNetwork(runSimNet, netGr);
-				simNet.init(typeGraph.singleGraph, true, true, stepToAnalyze);
+				simNet.init( stepToAnalyze);
 				Graph simNetGr = simNet.getGraph() ;
 				
 				// initialize store network
@@ -129,18 +127,18 @@ public class runMultiSim extends framework {
 				// initialize analysis network
 				analyzeNetwork analNet = new analyzeNetwork(runAnalysisNet, false ,stepToAnalyze, netGr, path, "analysisNet", nameFile);
 				indicator.normalDegreeDistribution.setFrequencyParameters(10, 0, 10);
-				indicator.degreeDistribution.setFrequencyParameters(10, 0, 10);
+				indicator.degreeDistribution.setFrequencyParameters(10, 0, 10); 
 				
-				Map map = new TreeMap<>();
+				Map mapNet = new TreeMap<>();
 				
-				map.put("sizeGrid",  sizeGridX);
-				map.put("Da", Da);
-				map.put("Db", Db);				
-				map.put("f", f);
-				map.put("k", k);
-				map.put("numStartSeed",  numNodes);
-				map.put("stepStore" , stepToStore) ;
-				analNet.setupHeader(false, map);
+				mapNet.put("sizeGrid",  sizeGridX);
+				mapNet.put("Da", Da);
+				mapNet.put("Db", Db);				
+				mapNet.put("f", f);
+				mapNet.put("k", k);
+				mapNet.put("numStartSeed",  numNodes);
+				mapNet.put("stepStore" , stepToStore) ;
+				analNet.setupHeader(false, mapNet);
 				
 				analNet.setIndicators(Arrays.asList(
 						indicator.seedCount ,
@@ -150,21 +148,27 @@ public class runMultiSim extends framework {
 				analNet.initAnalysis();
 				
 				// initialize analysis simplify network
-				analyzeNetwork analSimNet = new analyzeNetwork(runAnalysisSimNet, true , stepToAnalyze, simNetGr, path, "analysisSimNet", nameFile) ;
-				indicator.pathLengthDistribution.setFrequencyParameters(100, 0, 10);
+				analyzeNetwork analSimNet = new analyzeNetwork(runAnalysisSimNet, false ,stepToAnalyze, simNetGr, path, "analysisSimNet", nameFile);		
+				indicator.normalDegreeDistribution.setFrequencyParameters(10, 0, 10);
+				indicator.degreeDistribution.setFrequencyParameters(10, 0, 10); 
+				indicator.pathLengthDistribution.setFrequencyParameters(100, 0, 10 );
+				Map mapSimNet = new TreeMap<>();
+				
+				mapSimNet.put("sizeGrid",  sizeGridX);
+				mapSimNet.put("Da", Da);
+				mapSimNet.put("Db", Db);				
+				mapSimNet.put("f", f);
+				mapSimNet.put("k", k);
+				mapSimNet.put("numStartSeed",  numNodes);
+				mapSimNet.put("stepStore" , stepToStore) ;
+			
+				analSimNet.setupHeader(false, mapSimNet);
+				
 				analSimNet.setIndicators(Arrays.asList(
-						indicator.averageDegree , 
-						indicator.gammaIndex ,
-						indicator.pathLengthDistribution));
+						indicator.pathLengthDistribution ,
+						indicator.degreeDistribution
+						));
 				analSimNet.initAnalysis();
-
-				// setup viz netGraph
-				handleVizStype netViz = new handleVizStype( netGr ,stylesheet.manual , "seed", 1) ;
-				netViz.setupIdViz(false , netGr, 20 , "black");
-				netViz.setupDefaultParam (netGr, "black", "black", 5 , 0.5 );
-				netViz.setupVizBooleanAtr(true, netGr, "black", "red" , false , false ) ;
-				netViz.setupFixScaleManual( true , netGr, sizeGridX , 0);
-		//		netGr.display(false);	
 				
 				int t = 0 ; 
 				while ( t <= stepMax && ! lSeed.getListSeeds().isEmpty()  ) {	
@@ -173,7 +177,7 @@ public class runMultiSim extends framework {
 //						System.out.println("numberMaxLo " + lMl.getNumMaxLoc());
 //						System.out.println("numberNodes "+ netGr.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
 					}
-		//			try { 
+		
 						// compute layers
 						lRd.updateLayer(); 
 						lMl.updateLayer();
@@ -192,11 +196,6 @@ public class runMultiSim extends framework {
 						analSimNet.compute(t);
 
 						t++;
-//					}
-//					catch (NullPointerException e) {
-//						e.printStackTrace();
-//						break ;
-//					}
 				}
 
 				System.out.println("step " + t + " seed " + lSeed.getListSeeds().size() + " node " + netGr.getNodeCount()+ "\n");

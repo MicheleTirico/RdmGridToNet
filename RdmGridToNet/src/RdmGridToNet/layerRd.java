@@ -44,7 +44,7 @@ public class layerRd extends framework   {
 		this.sizeY = sizeY ;
 		this.numCellX = numCellX ;
 		this.numCellY = numCellY ;
-		this.typeRadius  =  typeRadius ;
+		this.typeRadius  =  typeRadius ; 
 		cells = new cell[numCellX][numCellY];
 	}
 
