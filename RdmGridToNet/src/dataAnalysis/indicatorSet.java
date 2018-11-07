@@ -25,7 +25,7 @@ public class indicatorSet extends framework {
 
 	private Graph graphToAnalyze;
 	private String  path  ;
-	private FileWriter fwGI, fwAD,fwSC,fwNDD , fwPLD , fwDD;
+	private FileWriter fwGI, fwAD,fwSC,fwNDD , fwPLD , fwDD , fwEC, fwTEL;
 	private int numFreqNND , numFreqPLD;
 	private double minValFreqNND , maxValFreqPLD;
 	private analyzeNetwork aN ;
@@ -36,7 +36,9 @@ public class indicatorSet extends framework {
 		averageDegree("averageDegree", false ) ,
 		degreeDistribution ("degreeDistribution", true , 0,0,0) ,
 		normalDegreeDistribution ("normalDegreeDistribution", true , 0 , 0 , 0 ),
-		pathLengthDistribution("pathLengthDistribution", true , 0 , 0 , 0 );
+		pathLengthDistribution("pathLengthDistribution", true , 0 , 0 , 0 ) ,
+		totalEdgeLength("totalEdgeLength", false ) ,
+		edgeCount (" edgeCount" , false );
 	
 		private String id ;
 		private boolean isList ;
@@ -121,6 +123,13 @@ public class indicatorSet extends framework {
 				break;
 			case degreeDistribution :
 				fwDD = new FileWriter(path, true) ;
+				break ;
+			case totalEdgeLength :
+				fwTEL = new FileWriter(path,true) ;
+				break ;
+			case edgeCount :
+				fwEC = new FileWriter(path,true) ;
+				break ;
 		}
 	}
 	
@@ -144,6 +153,12 @@ public class indicatorSet extends framework {
 				break; 
 			case degreeDistribution :
 				fw = fwDD ;
+				break ;
+			case totalEdgeLength :
+				fw = fwTEL ;
+				break ;
+			case edgeCount :
+				fw = fwEC ;
 				break ;
 		}
 		return fw ;
@@ -184,6 +199,12 @@ public class indicatorSet extends framework {
 			case averageDegree :
 				val = getAverageDegree();
 				break ;	
+			case edgeCount :
+				val = getEdgeCount () ;
+				break ;
+			case totalEdgeLength :
+				val = getTotalEdgeLength () ;
+				break ;
 		} //	System.out.println(graphToAnalyze + " "+ in.getId() + " "+ val);
 		return val ;
 	}
@@ -244,10 +265,8 @@ public class indicatorSet extends framework {
 	// path length distribution
 	private double[] getPLD (  int numberFrequency , double valMin , double valMax ) {
 		double [] vals = new double[numberFrequency] ;	
-
 		Map<Edge, ArrayList<Double>> mapEdgeLen = getMapEdgeValue(graphToAnalyze, "listLen");
 		ArrayList<Double> listLen = new ArrayList<Double>() ;
-
 		for ( Edge e : mapEdgeLen.keySet()) 
 			for ( double val : mapEdgeLen.get(e))
 				listLen.add(val);
@@ -260,7 +279,40 @@ public class indicatorSet extends framework {
 		}
 		return vals;
 	}
-
+	
+	/** get edge count */
+	private double getEdgeCount ( ) {
+		return getEdgeCountandLength(indicator.edgeCount);
+	}
+	
+	/** compute both edge count and total edge length **/
+	private double getEdgeCountandLength ( indicator in  ) {
+		double edgeCount = 0 ;
+		double totLen = 0 ;
+		for ( Edge e : graphToAnalyze.getEachEdge() ) {
+			try { 
+			ArrayList<Double> listLen = e.getAttribute("listLen");
+			edgeCount = edgeCount + listLen.size();
+			totLen = totLen + listLen.stream().mapToDouble(a -> a).sum();
+			} catch (NullPointerException ex) {
+				edgeCount = edgeCount + 1 ;	
+				totLen = totLen + getDistGeom(e.getNode0(), e.getNode1());
+			}
+		}
+		if ( in.equals(indicator.edgeCount))
+			return edgeCount ;
+		else if ( in.equals(indicator.totalEdgeLength))
+			return totLen ;
+		else {
+			System.out.println("not good indicator");
+			return 0 ;
+		}
+	}
+	
+	/** get total edge length  */
+	private double getTotalEdgeLength ( ) {
+		return getEdgeCountandLength(indicator.totalEdgeLength) ;
+	}
 // GET VALUES FOR EACH GRAPH ELEMENT ---------------------------------------------------------------------------------------------------------------- 
 	private Map getMapNodeValue ( Graph gr , String attr ){	
 		Map map = new HashMap();

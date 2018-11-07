@@ -26,22 +26,22 @@ public class runMultiSim extends framework {
 	private static int stepToStore = 10 , 
 			stepToAnalyze = 10 ,
 			stepToPrint = 100 ,
-			stepMax = 5000 ;
+			stepMax = 2000 ;
 	 
 	// parameters multi sim 
-	private static  double incremKill = 0.005 , 
-			incremFeed = 0.005 ,
-			minFeed = 0.005 ,
+	private static  double incremKill = 0.002 , 
+			incremFeed = 0.002 ,
+			minFeed = 0.012 ,
 			maxFeed = 0.081 , 
-			minKill = 0.005  ,
+			minKill = 0.01  ,
 			maxKill = 0.081 ;
 	 
-	private static  String  path = "D:\\ownCloud\\RdmGrid_exp\\multiSim_02\\increm_005" ;
+	private static  String  path = "D:\\ownCloud\\RdmGrid_exp\\multiSim_step2000\\increm_002" ;
 	
 	// store and analysis parameters 
 	private static boolean  runStoreRd = false ,
-			runStoreSimNet = true  , 
-			runStoreNet = true  ,
+			runStoreSimNet = false  , 
+			runStoreNet = false ,
 			runSimNet = true , 
 			runAnalysisNet = true ,
 			runAnalysisSimNet = true ;
@@ -72,6 +72,12 @@ public class runMultiSim extends framework {
 			radiusNet = 4 ;
 	
 	public static void main(String[] args) throws Exception {	
+		
+		System.out.println("step max , store , analysis : " + stepMax + " " + stepToStore + " " + stepToAnalyze );
+		System.out.println("increm f , k : " +  incremFeed + " " + incremKill);
+		System.out.println("min and max , feed : " + minFeed + " " + maxFeed ) ;
+		System.out.println("min and max , kill : " + minKill + " " + maxKill );
+		System.out.println("//----------------------------------------------------" + "\n");
 		
 		for ( double f = minFeed ; f <= maxFeed ; f = f + incremFeed ) 
 			for ( double k = minKill ; k <= maxKill ; k = k + incremKill ) {
@@ -143,7 +149,9 @@ public class runMultiSim extends framework {
 				analNet.setIndicators(Arrays.asList(
 						indicator.seedCount ,
 						indicator.degreeDistribution,
-						indicator.normalDegreeDistribution 
+						indicator.normalDegreeDistribution ,
+						indicator.edgeCount ,
+						indicator.totalEdgeLength 
 						));
 				analNet.initAnalysis();
 				
@@ -166,18 +174,21 @@ public class runMultiSim extends framework {
 				
 				analSimNet.setIndicators(Arrays.asList(
 						indicator.pathLengthDistribution ,
-						indicator.degreeDistribution
+						indicator.degreeDistribution ,
+						indicator.edgeCount ,
+						indicator.totalEdgeLength 
 						));
 				analSimNet.initAnalysis();
 				
 				int t = 0 ; 
+				System.out.print("steps : " );
 				while ( t <= stepMax && ! lSeed.getListSeeds().isEmpty()  ) {	
-					if ( t / (double) stepToPrint - (int)(t / (double) stepToPrint ) < 0.01) {
-//						System.out.println("---- step " +t +" --------------");
-//						System.out.println("numberMaxLo " + lMl.getNumMaxLoc());
-//						System.out.println("numberNodes "+ netGr.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
+					
+					if ( t / (double) stepToPrint - (int)(t / (double) stepToPrint ) < 0.0001) {	
+						System.out.print( t +", ");
 					}
-		
+					
+					try { 
 						// compute layers
 						lRd.updateLayer(); 
 						lMl.updateLayer();
@@ -196,9 +207,14 @@ public class runMultiSim extends framework {
 						analSimNet.compute(t);
 
 						t++;
+					} catch (OutOfMemoryError e) {
+						e.printStackTrace();
+						System.out.println("remove all files: " + nameFile);
+						break ; 
+					}
 				}
 
-				System.out.println("step " + t + " seed " + lSeed.getListSeeds().size() + " node " + netGr.getNodeCount()+ "\n");
+				System.out.println("\n" + "step " + t + " seed " + lSeed.getListSeeds().size() + " node " + netGr.getNodeCount()+ "\n");
 				// close files
 				storeNet.closeStore();
 				storeSimNet.closeStore();

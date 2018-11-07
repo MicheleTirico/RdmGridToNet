@@ -30,7 +30,7 @@ public class runAndAnalyze extends framework {
 		private static int stepToStore = 10 , 
 				stepToAnalyze = 10 ,
 				stepToPrint = 100 ,
-				stepMax = 300 ;
+				stepMax = 50 ;
 		
 		private static  String  path = "D:\\ownCloud\\RdmGrid_exp\\test" ;
 		
@@ -38,9 +38,9 @@ public class runAndAnalyze extends framework {
 	private static boolean  runStoreRd = false ,
 			runStoreSimNet = false , 
 			runStoreNet = false ,
-			runSimNet = false , 
+			runSimNet = true , 
 			runAnalysisNet = true,
-			runAnalysisSimNet = false ;
+			runAnalysisSimNet = true ;
 	
 	// layer Rd
 	private static int sizeGridX = 200, 
@@ -78,7 +78,8 @@ public class runAndAnalyze extends framework {
 		
 		// set Rd classical pattern
 		setRdType ( RdmType.solitions) ;	
-		lRd.setGsParameters(f, k, Da, Db, typeDiffusion.mooreCost );
+		f = 0.01 ; k = 0.025 ; 
+		lRd.setGsParameters(f , k , Da, Db, typeDiffusion.mooreCost );
 		
 		lMl = new layerMaxLoc(true,true, typeInit.test, typeComp.wholeGrid, m );
 		lMl.initializeLayer();
@@ -134,7 +135,9 @@ public class runAndAnalyze extends framework {
 		analNet.setIndicators(Arrays.asList(
 				indicator.seedCount ,
 				indicator.degreeDistribution,
-				indicator.normalDegreeDistribution 
+				indicator.normalDegreeDistribution ,
+				indicator.edgeCount ,
+				indicator.totalEdgeLength 
 				));
 		analNet.initAnalysis();
 		
@@ -158,7 +161,9 @@ public class runAndAnalyze extends framework {
 		analSimNet.setIndicators(Arrays.asList(
 				indicator.pathLengthDistribution ,
 				indicator.averageDegree ,
-				indicator.degreeDistribution
+				indicator.degreeDistribution ,
+				indicator.edgeCount ,
+				indicator.totalEdgeLength 
 				));
 		analSimNet.initAnalysis();
 
