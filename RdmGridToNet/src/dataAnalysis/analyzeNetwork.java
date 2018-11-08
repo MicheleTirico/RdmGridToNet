@@ -38,6 +38,7 @@ public class analyzeNetwork  {
 		if ( run ) {
 			hF = new handleFolder(path) ;
 			hF.createNewGenericFolder(nameFolder); 
+			iS.setIsSim(isSim);
 		}
 	}
 	

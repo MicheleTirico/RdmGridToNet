@@ -20,7 +20,7 @@ import dataAnalysis.storeRd.whichMorpToStore;
 import netViz.handleVizStype;
 import netViz.handleVizStype.stylesheet;
 
-public class runMultiSim extends framework {
+public class runMultiSim_02 extends framework {
 	
 // SETUP PARAMETERS ---------------------------------------------------------------------------------------------------------------------------------
 	// common parameters
@@ -32,12 +32,12 @@ public class runMultiSim extends framework {
 	// parameters multi sim 
 	private static  double incremKill = 0.005 , 
 			incremFeed = 0.005 ,
-			minFeed = 0.010 ,
+			minFeed = 0.005 ,
 			maxFeed = 0.081 , 
-			minKill = 0.01  ,
+			minKill = 0.005  ,
 			maxKill = 0.081 ;
 	 
-	private static  String  path = "D:\\ownCloud\\RdmGrid_exp\\multiSim_step2000\\increm_005" ;
+	private static  String  path = "D:\\ownCloud\\RdmGrid_exp\\multiSim_grid100\\increm_005" ;
 	
 	// store and analysis parameters 
 	private static boolean  runStoreRd = false ,
@@ -71,8 +71,6 @@ public class runMultiSim extends framework {
 	private static int numNodes = 50, 
 			radiusRd = 2 , 
 			radiusNet = 4 ;
-	
-
 	
 	public static void main(String[] args) throws Exception {	
 		
@@ -152,9 +150,9 @@ public class runMultiSim extends framework {
 				analNet.setIndicators(Arrays.asList(
 						indicator.seedCount ,
 						indicator.degreeDistribution,
-						indicator.normalDegreeDistribution ,
+						indicator.totalEdgeLength,
 						indicator.edgeCount ,
-						indicator.totalEdgeLength 
+						indicator.totalEdgeLengthMST
 						));
 				analNet.initAnalysis();
 				
@@ -176,10 +174,9 @@ public class runMultiSim extends framework {
 				analSimNet.setupHeader(false, mapSimNet);
 				
 				analSimNet.setIndicators(Arrays.asList(
-						indicator.pathLengthDistribution ,
 						indicator.degreeDistribution ,
-						indicator.edgeCount ,
-						indicator.totalEdgeLength 
+						indicator.pathLengthDistribution ,			
+						indicator.edgeCount
 						));
 				analSimNet.initAnalysis();
 				

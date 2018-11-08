@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.graphstream.algorithm.Kruskal;
 import org.graphstream.algorithm.Toolkit;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Element;
@@ -25,10 +26,11 @@ public class indicatorSet extends framework {
 
 	private Graph graphToAnalyze;
 	private String  path  ;
-	private FileWriter fwGI, fwAD,fwSC,fwNDD , fwPLD , fwDD , fwEC, fwTEL;
+	private FileWriter fwGI, fwAD,fwSC,fwNDD , fwPLD , fwDD , fwEC, fwTEL , fwTLMST;
 	private int numFreqNND , numFreqPLD;
 	private double minValFreqNND , maxValFreqPLD;
 	private analyzeNetwork aN ;
+	private boolean isSim ;
 	
 	public enum indicator { 
 		seedCount("seedCount" , false ),
@@ -38,8 +40,9 @@ public class indicatorSet extends framework {
 		normalDegreeDistribution ("normalDegreeDistribution", true , 0 , 0 , 0 ),
 		pathLengthDistribution("pathLengthDistribution", true , 0 , 0 , 0 ) ,
 		totalEdgeLength("totalEdgeLength", false ) ,
-		edgeCount (" edgeCount" , false );
-	
+		edgeCount (" edgeCount" , false ) ,
+		totalEdgeLengthMST ("totalLengthEdgeMST" , false ) ;
+		
 		private String id ;
 		private boolean isList ;
 		private int numFreq;
@@ -50,7 +53,7 @@ public class indicatorSet extends framework {
 			this.id = id ;
 			this.isList = isList ;
 		}
-		
+			
 		private indicator ( String id , boolean  isList, int numFreq, double minVal, double maxVal ) {
 			this.id = id ;
 			this.isList = isList ; 
@@ -88,6 +91,7 @@ public class indicatorSet extends framework {
 		public String getId ( ) {
 			return id ;
 		}
+		
 		public void setId ( String id ) {
 			this.id = id ;
 		}	
@@ -99,6 +103,9 @@ public class indicatorSet extends framework {
 		}	
 	}	
 
+	public void setIsSim ( boolean isSim ) {
+		this.isSim = isSim ; ;
+	}
 	public void setPath(String path) {	
 		this.path = path;
 	}
@@ -130,6 +137,9 @@ public class indicatorSet extends framework {
 			case edgeCount :
 				fwEC = new FileWriter(path,true) ;
 				break ;
+			case totalEdgeLengthMST :
+				fwTLMST = new FileWriter(path,true) ;
+				break ;
 		}
 	}
 	
@@ -159,6 +169,9 @@ public class indicatorSet extends framework {
 				break ;
 			case edgeCount :
 				fw = fwEC ;
+				break ;
+			case totalEdgeLengthMST :
+				fw = fwTLMST ;
 				break ;
 		}
 		return fw ;
@@ -200,11 +213,15 @@ public class indicatorSet extends framework {
 				val = getAverageDegree();
 				break ;	
 			case edgeCount :
-				val = getEdgeCount () ;
+				val = getEdgeCount (isSim ) ;
 				break ;
 			case totalEdgeLength :
-				val = getTotalEdgeLength () ;
+				val = getTotalEdgeLength ( isSim ) ;
 				break ;
+			case totalEdgeLengthMST :
+				val = getTotalEdgeLengthMST ( isSim ) ;
+				break ;
+				
 		} //	System.out.println(graphToAnalyze + " "+ in.getId() + " "+ val);
 		return val ;
 	}
@@ -280,24 +297,58 @@ public class indicatorSet extends framework {
 		return vals;
 	}
 	
+	
 	/** get edge count */
-	private double getEdgeCount ( ) {
-		return getEdgeCountandLength(indicator.edgeCount);
+	private double getEdgeCount ( boolean isSim  ) {
+		return getEdgeCountAndLength(indicator.edgeCount ,  isSim );
+	}
+		
+	/** get total edge length  */
+	private double getTotalEdgeLength ( boolean isSim ) {		
+		return getEdgeCountAndLength(indicator.totalEdgeLength , isSim ) ;
+	}
+	
+	/** get total edge length of minimum spanning tree  */
+	private double getTotalEdgeLengthMST ( boolean isSim  ) {
+		// compute Krustal algoritm
+		Kruskal kruskal = new Kruskal( "tree" , true , false ) ;
+		kruskal.init(graphToAnalyze) ;
+		kruskal.compute();	
+		double len = 0 ;
+		for ( Edge e : graphToAnalyze.getEachEdge()) {
+			boolean tree = e.getAttribute("tree");	
+			if ( tree ) 
+				if ( isSim ) {
+					ArrayList<Double> list = e.getAttribute("listLen");
+					len = len + list.stream().mapToDouble(f -> f).sum() ;
+				} 
+				else 
+					len = len + (double) e.getAttribute("length");
+		}
+		
+		return len ;
 	}
 	
 	/** compute both edge count and total edge length **/
-	private double getEdgeCountandLength ( indicator in  ) {
+	private double getEdgeCountAndLength ( indicator in , boolean isSim  ) {
 		double edgeCount = 0 ;
 		double totLen = 0 ;
-		for ( Edge e : graphToAnalyze.getEachEdge() ) {
-			try { 
-			ArrayList<Double> listLen = e.getAttribute("listLen");
-			edgeCount = edgeCount + listLen.size();
-			totLen = totLen + listLen.stream().mapToDouble(a -> a).sum();
-			} catch (NullPointerException ex) {
-				edgeCount = edgeCount + 1 ;	
-				totLen = totLen + getDistGeom(e.getNode0(), e.getNode1());
+		if ( isSim ) {
+			for ( Edge e : graphToAnalyze.getEachEdge() ) {
+				try { 
+				ArrayList<Double> listLen = e.getAttribute("listLen");
+				edgeCount = edgeCount + listLen.size();
+				totLen = totLen + listLen.stream().mapToDouble(a -> a).sum();
+				} catch (NullPointerException ex) {
+					edgeCount = edgeCount + 1 ;	
+					totLen = totLen + getDistGeom(e.getNode0(), e.getNode1());
+				}
 			}
+		}
+		else {
+			edgeCount = graphToAnalyze.getEdgeCount();
+			for ( Edge e : graphToAnalyze.getEachEdge() ) 
+				totLen = totLen + getDistGeom(e.getNode0(), e.getNode1()) ;			
 		}
 		if ( in.equals(indicator.edgeCount))
 			return edgeCount ;
@@ -309,10 +360,6 @@ public class indicatorSet extends framework {
 		}
 	}
 	
-	/** get total edge length  */
-	private double getTotalEdgeLength ( ) {
-		return getEdgeCountandLength(indicator.totalEdgeLength) ;
-	}
 // GET VALUES FOR EACH GRAPH ELEMENT ---------------------------------------------------------------------------------------------------------------- 
 	private Map getMapNodeValue ( Graph gr , String attr ){	
 		Map map = new HashMap();

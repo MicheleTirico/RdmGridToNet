@@ -16,6 +16,7 @@ import RdmGridToNet.framework.typeVectorField;
 import RdmGridToNet.layerMaxLoc.typeComp;
 import RdmGridToNet.layerMaxLoc.typeInit;
 import RdmGridToNet.layerRd.typeDiffusion;
+import RdmGridToNet.layerSeed.handleLimitBehaviur;
 import dataAnalysis.indicatorSet.indicator;
 import dataAnalysis.analyzeNetwork;
 import dataAnalysis.storeNetwork;
@@ -30,7 +31,7 @@ public class runAndAnalyze extends framework {
 		private static int stepToStore = 10 , 
 				stepToAnalyze = 10 ,
 				stepToPrint = 100 ,
-				stepMax = 50 ;
+				stepMax = 200 ;
 		
 		private static  String  path = "D:\\ownCloud\\RdmGrid_exp\\test" ;
 		
@@ -43,8 +44,8 @@ public class runAndAnalyze extends framework {
 			runAnalysisSimNet = true ;
 	
 	// layer Rd
-	private static int sizeGridX = 200, 
-			sizeGridY = 200 ;
+	private static int sizeGridX = 100, 
+			sizeGridY = 100 ;
 	private static double Da = 0.2 ,
 			Db = 0.1 ,
 			initVal0 = 1 ,
@@ -78,7 +79,7 @@ public class runAndAnalyze extends framework {
 		
 		// set Rd classical pattern
 		setRdType ( RdmType.solitions) ;	
-		f = 0.01 ; k = 0.025 ; 
+		f = 0.01 ; k = 0.02 ; 
 		lRd.setGsParameters(f , k , Da, Db, typeDiffusion.mooreCost );
 		
 		lMl = new layerMaxLoc(true,true, typeInit.test, typeComp.wholeGrid, m );
@@ -88,11 +89,12 @@ public class runAndAnalyze extends framework {
 		Graph netGr = lNet.getGraph();
 		Graph locGr = lMl.getGraph() ;
 		
-		lSeed = new layerSeed( r , m , alfa  );
+		lSeed = new layerSeed( r , m , alfa ,handleLimitBehaviur.stopSimWhenReachLimit );
 		initMultiCircle(perturVal0,perturVal1,numNodes , sizeGridX/2 ,sizeGridY/2, 2 , radiusNet );		
 		
 		lNet.setLengthEdges("length" , true );
-				
+		
+		
 		NumberFormat nf = NumberFormat.getNumberInstance();
 		nf.setMaximumFractionDigits(3);
 		
@@ -135,14 +137,14 @@ public class runAndAnalyze extends framework {
 		analNet.setIndicators(Arrays.asList(
 				indicator.seedCount ,
 				indicator.degreeDistribution,
-				indicator.normalDegreeDistribution ,
+				indicator.totalEdgeLength,
 				indicator.edgeCount ,
-				indicator.totalEdgeLength 
+				indicator.totalEdgeLengthMST
 				));
 		analNet.initAnalysis();
 		
 		// initialize analysis simplify network
-		analyzeNetwork analSimNet = new analyzeNetwork(runAnalysisSimNet, false ,stepToAnalyze, simNetGr, path, "analysisSimNet", nameFile);		
+		analyzeNetwork analSimNet = new analyzeNetwork(runAnalysisSimNet, true ,stepToAnalyze, simNetGr, path, "analysisSimNet", nameFile);		
 		indicator.normalDegreeDistribution.setFrequencyParameters(10, 0, 10);
 		indicator.degreeDistribution.setFrequencyParameters(10, 0, 10); 
 		indicator.pathLengthDistribution.setFrequencyParameters(10, 0, 5);
@@ -158,12 +160,11 @@ public class runAndAnalyze extends framework {
 	
 		analSimNet.setupHeader(false, mapSimNet);
 		
-		analSimNet.setIndicators(Arrays.asList(
-				indicator.pathLengthDistribution ,
-				indicator.averageDegree ,
+		analSimNet.setIndicators(Arrays.asList(	
 				indicator.degreeDistribution ,
-				indicator.edgeCount ,
-				indicator.totalEdgeLength 
+				indicator.pathLengthDistribution ,			
+			//	indicator.totalEdgeLength ,
+				indicator.edgeCount 
 				));
 		analSimNet.initAnalysis();
 
@@ -173,13 +174,21 @@ public class runAndAnalyze extends framework {
 		netViz.setupDefaultParam (netGr, "black", "black", 5 , 0.5 );
 		netViz.setupVizBooleanAtr(true, netGr, "black", "red" , false , false ) ;
 		netViz.setupFixScaleManual( true , netGr, sizeGridX , 0);
+		
+		// setup viz netGraph
+		handleVizStype simNetViz = new handleVizStype( simNetGr ,stylesheet.manual , "seed", 1) ;
+		simNetViz .setupIdViz(false , simNetGr , 20 , "black");
+		simNetViz .setupDefaultParam (simNetGr , "black", "black", 5 , 0.5 );
+		simNetViz .setupVizBooleanAtr(true, simNetGr , "black", "red" , false , false ) ;
+		simNetViz .setupFixScaleManual( false , simNetGr , sizeGridX , 0);
 
 		netGr.display(false);	
+	// 	simNetGr.display(false);
 		// setup RD viz
 		Viz viz = new Viz(lRd);
 
 		int t = 0 ; 
-		while ( t <= stepMax && ! lSeed.getListSeeds().isEmpty()  ) {	
+		while ( t <= stepMax && ! lSeed.getListSeeds().isEmpty() && lNet.seedHasReachLimit == false ) {	
 			System.out.println("---- step " +t +" --------------");
 			// compute layers
 			lRd.updateLayer(); 
@@ -204,6 +213,7 @@ public class runAndAnalyze extends framework {
 			t++;
 		}
 
+		System.out.println(lSeed.getNumSeeds());
 		// close files
 		storeNet.closeStore();
 		storeSimNet.closeStore();
@@ -212,8 +222,13 @@ public class runAndAnalyze extends framework {
 		analNet.closeFileWriter();
 		analSimNet.closeFileWriter();
 		
-		simNetGr.display(false);
+	//	simNet.compute();
+	//	simNetGr.display(false);
 
+		for ( Edge e : netGr.getEachEdge() ) {
+			double len = e.getAttribute("length");
+//			System.out.println(len);
+		}
 		
 		// only for viz
 		for ( seed s : lSeed.getListSeeds()) 	

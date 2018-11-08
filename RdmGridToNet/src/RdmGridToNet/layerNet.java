@@ -22,6 +22,7 @@ import org.graphstream.graph.Path;
 import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 
+import RdmGridToNet.layerSeed.handleLimitBehaviur;
 import scala.languageFeature.reflectiveCalls;
 
 public class layerNet extends framework {
@@ -30,6 +31,7 @@ public class layerNet extends framework {
 	private double radius;
 	private String id ; 
 	public enum typeSetupLayer { circle , test }
+	protected boolean seedHasReachLimit ;
 	private static typeSetupLayer typeSetupLayer ;
 	
 	private Graph graph = new SingleGraph ( "net" );
@@ -76,18 +78,29 @@ public class layerNet extends framework {
 			// get cooord of potential node
 			idNode = Integer.toString(idNodeInt)  ;
 			graph.addNode( idNode ) ; 
-			nodeF = graph.getNode(idNode ) ;
+			nodeF = graph.getNode( idNode ) ;
 			if ( isFeedBackModel)
 				lNet.setNodeInCell(nodeF, true );
-			
+	
 			// compute vector
 			double[] vec = lSeed.getVector(s , typeVectorField, typeRadius );	
+			double coordX = s.getX() + vec[0] , coordY =  s.getY() + vec[1] ;
 			
-			s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
+			if ( layerSeed.handleLimitBehaviur.equals( handleLimitBehaviur.stopSimWhenReachLimit )  ) 
+				if ( coordX < 2 || coordX >= lRd.getSizeGrid()[0] - 1 ||  coordY < 2 || coordY >= lRd.getSizeGrid()[1] - 1  ) {				
+			//		listSeedsToRemove.addAll(lSeed.getListSeeds());
+					seedHasReachLimit = true ;
+					System.out.print("sim stoped because a seed reach world limit");					
+				//	System.exit(0);
+					break;
+				}
+			
+			
+			s.setCoords(coordX , coordY);	
 			lSeed.setSeedInCell(s, true);
 			
 			// set coordinates of new node
-			nodeF.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
+			nodeF.setAttribute("xyz", coordX , coordY , 0);
 			
 			// create edge
 			idEdge = Integer.toString(idEdgeInt+1 );

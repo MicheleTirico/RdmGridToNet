@@ -155,11 +155,13 @@ public class handleVizStype {
 
 			graph.addNode(idNode);
 			graph.getNode(idNode).setAttribute( "xyz", XYmax , XYmax, 0 );
+			graph.getNode(idNode).setAttribute("scale", true);
 //			graph.removeNode(idNode);
 			
 			idNode = "setScale" + 2;
 			graph.addNode(idNode);
 			graph.getNode(idNode).setAttribute( "xyz", XYMin , XYMin, 0 );
+			graph.getNode(idNode).setAttribute("scale", true);
 //			graph.removeNode(idNode);
 		
 		} catch (org.graphstream.graph.IdAlreadyInUseException e) { return ;	}

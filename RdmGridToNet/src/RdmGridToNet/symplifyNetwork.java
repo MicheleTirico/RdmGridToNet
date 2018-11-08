@@ -123,12 +123,15 @@ public class symplifyNetwork extends framework{
 		}
 	}
 	
-	public void compute ( int t ) {
-		if ( run && t / stepToAnalyze - (int)(t / stepToAnalyze ) < 0.01 ) {  
-			simGr.getEachNode().forEach(n -> simGr.removeNode(n));
+	public void compute ( int t ) {	
+
+		simGr.getEachNode().forEach(n -> simGr.removeNode(n));
+		if ( run && t / stepToAnalyze - (int)(t / stepToAnalyze ) < 0.01 ) {  			
 			compute () ;
 		}
 	}
+	
+
 	
 // GET METHODS --------------------------------------------------------------------------------------------------------------------------------------
 	private ArrayList<Path> getListPath ( Graph gr ) {
@@ -296,6 +299,12 @@ public class symplifyNetwork extends framework{
 		else 
 			return n.getAttribute("nodeSimGr");
 		
+	}
+	
+	public void setLengthEdges ( String attr , boolean setLengthEdges) {
+		if ( setLengthEdges ) 
+			for ( Edge e : simGr.getEachEdge() ) 
+				e.addAttribute("length", getLength(e));	
 	}
 
 }

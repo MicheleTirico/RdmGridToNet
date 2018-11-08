@@ -16,17 +16,20 @@ public class layerSeed extends framework {
 	private morphogen m ;
 	
 	public enum typeInitializationSeed {centerCellThMorp, test }
-
+	public enum handleLimitBehaviur { stopSimWhenReachLimit , test }
+	protected static handleLimitBehaviur handleLimitBehaviur ;
 	private static typeInitializationSeed typeInitializationSeed ;
-	 
+
+
 	public layerSeed () {
-		this( 0, null , 2);	
+		this( 0, null , 2 , null );	
 	}
 
-	public layerSeed ( double r , morphogen m , double alfa) {
+	public layerSeed ( double r , morphogen m , double alfa, handleLimitBehaviur handleLimitBehaviur) {
 		this.r = r ;		
 		this.m = m ; 
 		this.alfa = alfa ;
+		this.handleLimitBehaviur = handleLimitBehaviur ;
 	}
 	
 	public void setupGravityLayer ( double g , double alfa , double Ds ) {
@@ -51,7 +54,7 @@ public class layerSeed extends framework {
 		}
 	}
 	
-public void initializationSeedCircle ( int numNodes , double radius ) {
+	public void initializationSeedCircle ( int numNodes , double radius ) {
 		
 		Graph graph = lNet.getGraph() ;
 		double[] centerLayerRd = lRd.getCenter () ;
