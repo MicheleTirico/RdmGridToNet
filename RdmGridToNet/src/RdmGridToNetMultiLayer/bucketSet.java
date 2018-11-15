@@ -1,24 +1,23 @@
-package RdmGridToNet;
+package RdmGridToNetMultiLayer;
 
 import java.util.ArrayList;
 
 import org.graphstream.graph.Node;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 
-import RdmGridToNetMultiLayer.bucket;
-
-public class bucketSet extends framework {
+public class bucketSet extends framework  {
 
 	private bucket[][] buckets ;
 	private double sizeX, sizeY;
 	private int numBucketX, numBucketY;
 	private ArrayList<bucket> listBucket = new ArrayList<bucket>();
+	protected static  bucketSet bks = new bucketSet() ;
 	
 	public bucketSet ( ) {
 		this(0,0,0,0);
 	}
 
-	public bucketSet( double sizeX, double  sizeY, int numBucketX, int numBucketY) {
+	public bucketSet( double sizeX, double  sizeY, int numBucketX, int numBucketY ) {
 		this.sizeX = sizeX ;
 		this.sizeY = sizeY ;
 		this.numBucketX = numBucketX ;
@@ -28,7 +27,7 @@ public class bucketSet extends framework {
 	
 // INITIALIZATION GRID ------------------------------------------------------------------------------------------------------------------------------
 	public void initializeBukets (  ) {
-		for (int x = 0; x < numBucketX ; x++)
+		for (int x = 0; x < numBucketX ; x++ )
 			for (int y = 0; y < numBucketY ; y++) {
 				bucket b = new bucket(x, y, new ArrayList<Node>());
 				if ( !listBucket.contains(b)) {
@@ -40,7 +39,9 @@ public class bucketSet extends framework {
 
 	public void putNode ( Node n ) {	
 		double[] coords = GraphPosLengthUtils.nodePosition(n) ;
-		bucket b = bks.getBucket(coords[0], coords[1]);
+//		System.out.println(coords[0] + " " + coords[1]);
+//		System.out.println(buckets[(int)coords[0]][(int)coords[1]] );
+		bucket b = buckets[(int)coords[0]][(int)coords[1]] ; // bks.getBucket(coords[0], coords[1]);
 		b.addNode(n);
 	}
 	
@@ -88,8 +89,7 @@ public class bucketSet extends framework {
 			for ( double y = Y - radius ; y <= Y + radius ; y = y + sizeY ) 	
 				try {
 					for (Node no : getBucket(x, y).getistNodes()) 
-					
-						if (!list.contains(no) && layerNet.getDistGeom(GraphPosLengthUtils.nodePosition(no), coords) < radius )
+						if (!list.contains(no) && getDistGeom(GraphPosLengthUtils.nodePosition(no), coords) < radius )
 							list.add(no);	
 					} catch (NullPointerException e) {
 						// TODO: handle exception

@@ -1,4 +1,4 @@
-package RdmGridToNet;
+package RdmGridToNet_multiSim;
 
 import java.util.ArrayList;
 import java.util.Arrays;

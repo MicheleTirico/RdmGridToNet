@@ -296,8 +296,7 @@ public class indicatorSet extends framework {
 		}
 		return vals;
 	}
-	
-	
+		
 	/** get edge count */
 	private double getEdgeCount ( boolean isSim  ) {
 		return getEdgeCountAndLength(indicator.edgeCount ,  isSim );

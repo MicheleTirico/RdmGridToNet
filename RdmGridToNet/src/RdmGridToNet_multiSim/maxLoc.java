@@ -1,4 +1,4 @@
-package RdmGridToNet;
+package RdmGridToNet_multiSim;
 
 import org.graphstream.graph.Node;
 

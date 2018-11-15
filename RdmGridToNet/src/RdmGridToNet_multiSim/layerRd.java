@@ -1,7 +1,8 @@
-package RdmGridToNet;
+package RdmGridToNet_multiSim;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -11,7 +12,8 @@ import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 
-import RdmGridToNet.framework.morphogen;
+import RdmGridToNet_multiSim.framework.morphogen;
+import RdmGridToNet_multiSim.framework.typeDiffusion;
 
 public class layerRd extends framework   {
 
@@ -28,12 +30,8 @@ public class layerRd extends framework   {
 	private double DaMax , DbMin ;
 	private double  DaN ,  DaS  , DbN ,  DbS  ;
 	
-	public enum typeInitializationMaxLocal{ test , singlePoint , allPointActive , noInizialization }
-	public enum typeComputeMaxLocal{ test , movingMaxPoint , wholeGrid }
+	public typeDiffusion typeDiffusion ;
 	
-	public enum typeDiffusion { mooreCost, mooreWeigthed , vonNewmannCost }
-	
-	private typeDiffusion typeDiffusion ;
 
 	public layerRd ( ) {
 		this(0,0,0,0 , null );	
@@ -46,6 +44,7 @@ public class layerRd extends framework   {
 		this.numCellY = numCellY ;
 		this.typeRadius  =  typeRadius ; 
 		cells = new cell[numCellX][numCellY];
+		System.out.println("fin create layer " + (new Date()).toString());
 	}
 
 // INITIALIZATION GRID ------------------------------------------------------------------------------------------------------------------------------
@@ -59,15 +58,11 @@ public class layerRd extends framework   {
 	}
 	
 	public void initializeRandomVal ( int seedRd1, int seedRd2, double minVal1, double minVal2 , double maxVal1 , double maxVal2) {
-		Random rd1 = new Random( seedRd1 );
-		Random rd2 = new Random( seedRd2 );
 		for (int x = 0; x<numCellX; x++)
-			for (int y = 0; y<numCellY; y++) {	
-				double val1 =  minVal1 + (maxVal1 - minVal1) * rd1.nextDouble() ,
-						val2 =  minVal2 + (maxVal2 - minVal2) * rd2.nextDouble(); 
-				cell c = new cell(x,y,val1, val2, false , false , false);
+			for (int y = 0; y<numCellY; y++) {
+				cell c = new cell(x,y,getValRd(seedRd1, minVal1, maxVal1), getValRd(seedRd2, minVal2, maxVal2), false , false , false);
 				cells[x][y] = c ;
-				putCellInList(c);						
+				putCellInList(c);			
 			}	
 	}	
 	
@@ -96,6 +91,17 @@ public class layerRd extends framework   {
 		this.typeDiffusion = typeDiffusion;
 	}
 	
+	public void setDiffusion ( double Da, double Db, typeDiffusion typeDiffusion) {
+		this.Da = Da ;
+		this.Db = Db ;
+		this.typeDiffusion = typeDiffusion;
+	}
+	
+	public void setFeedAndKill ( double f , double k ) {
+		this.k = k ;
+		this.f = f ;
+	}
+	
 	// set perturbation 
 	public void setValueOfCell ( double valA , double valB , int cellX, int cellY ) {
 		cells[cellX][cellY].setVals(valA, valB);		
@@ -113,13 +119,13 @@ public class layerRd extends framework   {
 	public void updateLayer (  ) {
 		
 		for ( cell c : listCell ) {
+			
 			double 	valA = getValMorp(c, morphogen.a, false),
-					valB = getValMorp(c, morphogen.b, false);
+					valB = getValMorp(c, morphogen.b, false) ,
+							coefDiffA = 0 , coefDiffB = 0;;
 			
 			morphogen a = morphogen.a ;
 			morphogen b = morphogen.b ;
-				
-			double coefDiffA = 0 , coefDiffB = 0;
 			
 			if ( isFeedBackModel ) { // booleanSingleImpact , booleanCombinedImpact
 				switch (typeFeedbackModel) {
@@ -130,9 +136,8 @@ public class layerRd extends framework   {
 				case booleanCombinedImpact :
 					coefDiffA = getCoeffDifCombImp (a, c) ; 
 					coefDiffB = getCoeffDifCombImp (b, c);
-				}
-				
-			} 
+				}				
+			}
 			else {
 				coefDiffA = getCoefDiff(a) ; 
 				coefDiffB = getCoefDiff(b);
@@ -428,6 +433,11 @@ public class layerRd extends framework   {
 	
 	public cell[][] getCells () {
 		return cells;
+	}
+
+// SET METHODS --------------------------------------------------------------------------------------------------------------------------------------
+	public void setCells ( cell[][] cells ) {
+		this.cells = cells ;
 	}
 }
 

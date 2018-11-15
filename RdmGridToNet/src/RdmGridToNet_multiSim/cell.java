@@ -1,4 +1,4 @@
-package RdmGridToNet;
+package RdmGridToNet_multiSim;
 
 public class cell extends framework {
     private int X;
@@ -67,12 +67,6 @@ public class cell extends framework {
     
     public void setVals(double val1, double val2) {
     	this.val1 = val1;
-    	this.val2 = val2;
-    }
-    public void setVal1 (double val1) {
-    	this.val1 = val1;
-    }
-    public void setVal2 (double val2) {
     	this.val2 = val2;
     }
     

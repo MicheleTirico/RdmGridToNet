@@ -8,6 +8,7 @@ import java.util.TreeMap;
 
 import org.graphstream.graph.Graph;
 
+import RdmGridToNet.framework.morphogen;
 import RdmGridToNet.framework.typeVectorField;
 import RdmGridToNet.layerMaxLoc.typeComp;
 import RdmGridToNet.layerMaxLoc.typeInit;
@@ -21,7 +22,7 @@ import dataAnalysis.storeRd.whichMorpToStore;
 import netViz.handleVizStype;
 import netViz.handleVizStype.stylesheet;
 
-public class runMultiSim_02 extends framework {
+public class runMultiSim_fistful extends framework {
 	
 // SETUP PARAMETERS ---------------------------------------------------------------------------------------------------------------------------------
 	// common parameters
@@ -33,12 +34,12 @@ public class runMultiSim_02 extends framework {
 	// parameters multi sim 
 	private static  double incremKill = 0.005 , 
 			incremFeed = 0.005 ,
-			minFeed = 0.005 ,
-			maxFeed = 0.01 , 
+			minFeed = 0.045 ,
+			maxFeed = 0.081 , 
 			minKill = 0.005  ,
 			maxKill = 0.081 ;
 	 
-	private static  String  path = "D:\\ownCloud\\RdmGrid_exp\\multiSim_grid100" ;
+	private static  String  path = "D:\\ownCloud\\RdmGrid_exp\\multiSim_grid100_fistful" ;
 	
 	// store and analysis parameters 
 	private static boolean  runStoreRd = false ,
@@ -109,7 +110,7 @@ public class runMultiSim_02 extends framework {
 				lSeed = new layerSeed( r , morphogen.b , alfa , handleLimitBehaviur.stopSimWhenReachLimit );
 		
 				// initialize network and seed
-				initCircle(perturVal0 , perturVal1 , numNodes , sizeGridX/2 ,sizeGridY/2, radiusRd, radiusNet );		
+				initMultiFistFul(100, 20, 20, 3, 50  , morphogen.b, 1);	
 				
 				NumberFormat nf = NumberFormat.getNumberInstance();
 				nf.setMaximumFractionDigits(3);

@@ -11,7 +11,7 @@ import RdmGridToNet.*;
 public class Viz extends JFrame {
 
 	/** The reaction-diffusion layer computed elsewhere. */
-	protected layerRd lRd;
+	protected layerRd lRd ;
 
 	/** Image of one of the morphogens. */
 	protected BufferedImage iRd;

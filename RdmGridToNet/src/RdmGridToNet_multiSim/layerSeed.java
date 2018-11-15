@@ -1,9 +1,8 @@
-package RdmGridToNet;
+package RdmGridToNet_multiSim;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
@@ -15,12 +14,11 @@ public class layerSeed extends framework {
 	private ArrayList<seed> seeds = new ArrayList<seed>();
 	private double alfa, dist, g , Ds , r ;
 	private morphogen m ;
-	
-	public enum typeInitializationSeed {centerCellThMorp, test }
-	public enum handleLimitBehaviur { stopSimWhenReachLimit , test }
+
 	protected static handleLimitBehaviur handleLimitBehaviur ;
 	private static typeInitializationSeed typeInitializationSeed ;
 
+	private bucketSet bks = getBucketSet();
 
 	public layerSeed () {
 		this( 0, null , 2 , null );	
@@ -38,19 +36,14 @@ public class layerSeed extends framework {
 		this.alfa = alfa ;
 		this.Ds = Ds ; 
 	}
+
 	
 // INITIALIZATION SEED SET --------------------------------------------------------------------------------------------------------------------------
 	public void initializationSeedThMorp ( morphogen m , double minTh, double maxTh) {
-		Graph graph = lNet.getGraph() ;
-		for ( cell c : lRd.getListCell() ) {
+		for ( cell c : listCell ) {
 			double val = lRd.getValMorp(c, m, true) ;
-			if (val >= minTh && val <= maxTh) {
-				idNode =  Integer.toString(idNodeInt++) ;
-				graph.addNode(idNode) ;
-				Node n = graph.getNode(idNode);			
-				n.addAttribute("xyz", c.getX() ,  c.getY() , 0 );			
-				lSeed.createSeed( c.getX() ,  c.getY()  , n);
-			}		
+			if (val >= minTh && val <= maxTh)
+				createSeed(c.getX(), c.getY());
 		}
 	}
 	
@@ -61,19 +54,24 @@ public class layerSeed extends framework {
 		}
 	}
 	
-	public void initializationSeedCircle ( int numNodes , double radius ) {		
+	public void initializationSeedCircle ( int numNodes , double radius ) {
+		
 		Graph graph = lNet.getGraph() ;
 		double[] centerLayerRd = lRd.getCenter () ;
 		double 	centerX = centerLayerRd[0] , 
 				centerY = centerLayerRd[1] ,
 				angle = 2 * Math.PI / numNodes ;		
-		for ( idNodeInt = 0 ; idNodeInt < numNodes ; idNodeInt++ ) {			
+		for ( idNodeInt = 0 ; idNodeInt < numNodes ; idNodeInt++ ) {
+			
 			double 	coordX = radius * Math.cos( idNodeInt * angle ) ,
-					coordY = radius * Math.sin( idNodeInt * angle ) ;				
+					coordY = radius * Math.sin( idNodeInt * angle ) ;
+					
 			idNode =  Integer.toString(idNodeInt) ;
 			graph.addNode(idNode) ;
-			Node n = graph.getNode(idNode);			
-			n.addAttribute("xyz", centerX + coordX ,  centerY + coordY , 0 );			
+			Node n = graph.getNode(idNode);
+			
+			n.addAttribute("xyz", centerX + coordX ,  centerY + coordY , 0 );
+			
 			lSeed.createSeed(centerX + coordX, centerY + coordY , n);
 		}
 		
@@ -88,11 +86,13 @@ public class layerSeed extends framework {
 			}
 		}
 		for ( Node n : graph.getEachNode()) {
+			System.out.println(n);
 			bks.putNode(n);
 		}
+
 	}
 
-	public void initSeedCircle ( int numNodes , double radius , double centerX , double centerY) {		
+	public void initializationSeedCircle ( int numNodes , double radius , double centerX , double centerY) {		
  		Graph graph = lNet.getGraph() ;
 		double angle = 2 * Math.PI / numNodes ;		
 		int nodeCount = graph.getNodeCount() ;
@@ -128,11 +128,13 @@ public class layerSeed extends framework {
 		e.addAttribute("length", getDistGeom(listNodes.get(0),old));
 		idEdgeInt++;
 		 
-		for ( Node n : graph.getEachNode()) 
+		for ( Node n : graph.getEachNode())  {
+			System.out.println(bks);
 			bks.putNode(n);	
+		}
 	}
 	
-	public void initSeedCircleFeedBack ( int numNodes , double radius , double centerX , double centerY  ) {		
+	public void initializationSeedCircleFeedBack ( int numNodes , double radius , double centerX , double centerY  ) {		
  		Graph graph = lNet.getGraph() ;
 		double angle = 2 * Math.PI / numNodes ;		
 		int nodeCount = graph.getNodeCount() ;
@@ -339,8 +341,8 @@ public class layerSeed extends framework {
 					double 	distX = Math.pow(1+Math.abs(sY - y), alfa) ,
 							distY = Math.pow(1+Math.abs(sX - x), alfa); 
 			
-					double 	addVecX = ( lRd.getValMorp(lRd.getCell(x+1,y), m, false) - lRd.getValMorp(lRd.getCell(x-1,y), m, false) ) / distY , 
-							addVecY = ( lRd.getValMorp(lRd.getCell(x,y+1), m, false) - lRd.getValMorp(lRd.getCell(x,y-1), m, false) ) / distX ;
+					double 	addVecX = ( lRd.getValMorp(lRd.getCell(x+1,y), m, true) - lRd.getValMorp(lRd.getCell(x-1,y), m, true) ) / distY , 
+							addVecY = ( lRd.getValMorp(lRd.getCell(x,y+1), m, true) - lRd.getValMorp(lRd.getCell(x,y-1), m, true) ) / distX ;
 					
 					vecX = vecX + addVecX ;
 					vecY = vecY + addVecY ;		

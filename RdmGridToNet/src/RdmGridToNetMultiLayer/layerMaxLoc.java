@@ -1,4 +1,4 @@
-package RdmGridToNet;
+package RdmGridToNetMultiLayer;
 
 import java.util.ArrayList;
 
@@ -6,12 +6,19 @@ import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.SingleGraph;
 
+import RdmGridToNetMultiLayer.layerCell.typeNeighbourhood;
+
+
 public class layerMaxLoc extends framework {
 	
 	private ArrayList<cell> listMaxLocal = new ArrayList<cell>() ;		
 	private Graph graphMaxLoc = new SingleGraph ("maxLoc");
 	private boolean compute , vizLayer;
-	private morphogen m ;
+
+	protected static int idMaxLocInt; 
+	protected static String idMaxLoc ;
+	private layerCell lCell ;
+	private int posVal  ;
 	
 	public enum typeInit {test, // centreRd , allPointActive , noInizialization
 		};
@@ -21,15 +28,16 @@ public class layerMaxLoc extends framework {
 	private typeComp typeComp ;
 	
 	public layerMaxLoc () {
-		this(false, false ,null , null, null) ;
+		this(false, null, false, null, null, 0);
 	}
 	
-	public layerMaxLoc ( boolean compute , boolean vizLayer , typeInit  typeInit , typeComp typeComp , morphogen m ) {
+	public layerMaxLoc ( boolean compute , layerCell lCell ,  boolean vizLayer , typeInit  typeInit , typeComp typeComp ,  int posVal  ) {
 		this.compute = compute ;
+		this.lCell = lCell ;
 		this.vizLayer = vizLayer;
 		this.typeInit = typeInit ;
 		this.typeComp = typeComp ;	
-		this .m = m ;
+		this.posVal = posVal ;
 	}
 	
 // INITIALIZE LAYER ---------------------------------------------------------------------------------------------------------------------------------
@@ -64,13 +72,14 @@ public class layerMaxLoc extends framework {
 				listCellToRemove = new ArrayList<cell>() ;
 		
 		for ( bucket b : bks.getListBucketNotEmpty() ) {
-			cell c = lRd.getCell(b);
-			double val = lRd.getValMorp(c, m , false);
+			cell c = lCell.getCell(b);
+			double  val = lCell.getCellVals(c)[posVal];
+			
 			double valTest = 0 ;
 			int ind = 0;
-			ArrayList<cell> listNeig = lRd.getListNeighbors(typeNeighbourhood.moore, c.getX(), c.getY()) ;
+			ArrayList<cell> listNeig = lCell.getListNeighbors(typeNeighbourhood.moore, c.getX(), c.getY()) ;
 			while( valTest < val && ind < listNeig.size()) {
-				valTest = lRd.getValMorp(listNeig.get(ind), m, false);
+				valTest =  lCell.getCellVals(listNeig.get(ind))[posVal];
 				ind++;	
 			}
 			if ( ind == listNeig.size() && ! listMaxLocal.contains(c) ) 	
@@ -87,13 +96,13 @@ public class layerMaxLoc extends framework {
 		ArrayList<cell>  listCellToAdd = new ArrayList<cell>() ,
 				listCellToRemove = new ArrayList<cell>() ;
 				
-		for ( cell c : lRd.getListCell()) {
-			double val = lRd.getValMorp(c, m , false);
+		for ( cell c : lCell.getListCell()) {
+			double val = lCell.getCellVals(c)[posVal];
 			double valTest = 0 ;
 			int ind = 0;
-			ArrayList<cell> listNeig = lRd.getListNeighbors(typeNeighbourhood.moore, c.getX(), c.getY()) ;
+			ArrayList<cell> listNeig = lCell.getListNeighbors(typeNeighbourhood.moore, c.getX(), c.getY()) ;
 			while( valTest < val && ind < listNeig.size()) {
-				valTest = lRd.getValMorp(listNeig.get(ind), m, false);
+				valTest = lCell.getCellVals(listNeig.get(ind))[posVal]; 
 				ind++;	
 			}
 			if ( ind == listNeig.size() && ! listMaxLocal.contains(c) ) 	
@@ -110,13 +119,13 @@ public class layerMaxLoc extends framework {
 	// remove max local from list and set val at corresponding cell
 	private void removeMaxLocal ( cell c ) {
 		listMaxLocal.remove(c);
-		c.setMaxLocal(false);
+		c.setIsTest(0, false);
 	}	
 	
 	// add max local from list and set val at corresponding cell
 	private void addMaxLocal ( cell c  ) {
 		listMaxLocal.add(c);
-		c.setMaxLocal(true);
+		c.setIsTest(0, true);
 	}
 
 // VIZ LAYER ----------------------------------------------------------------------------------------------------------------------------------------

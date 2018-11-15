@@ -1,4 +1,4 @@
-package RdmGridToNet;
+package RdmGridToNet_multiSim;
 
 import java.util.ArrayList;
 
@@ -13,10 +13,7 @@ public class layerMaxLoc extends framework {
 	private boolean compute , vizLayer;
 	private morphogen m ;
 	
-	public enum typeInit {test, // centreRd , allPointActive , noInizialization
-		};
-	
-	public enum typeComp {test, wholeGrid , aroundNetGraph };
+
 	private typeInit  typeInit ;
 	private typeComp typeComp ;
 	
@@ -87,7 +84,7 @@ public class layerMaxLoc extends framework {
 		ArrayList<cell>  listCellToAdd = new ArrayList<cell>() ,
 				listCellToRemove = new ArrayList<cell>() ;
 				
-		for ( cell c : lRd.getListCell()) {
+		for ( cell c : listCell) {
 			double val = lRd.getValMorp(c, m , false);
 			double valTest = 0 ;
 			int ind = 0;

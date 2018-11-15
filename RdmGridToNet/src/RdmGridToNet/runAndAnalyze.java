@@ -31,7 +31,7 @@ public class runAndAnalyze extends framework {
 		private static int stepToStore = 10 , 
 				stepToAnalyze = 10 ,
 				stepToPrint = 100 ,
-				stepMax = 200 ;
+				stepMax = 10000 ;
 		
 		private static  String  path = "D:\\ownCloud\\RdmGrid_exp\\test" ;
 		
@@ -39,14 +39,14 @@ public class runAndAnalyze extends framework {
 	private static boolean  runStoreRd = false ,
 			runStoreSimNet = false , 
 			runStoreNet = false ,
-			runSimNet = true , 
-			runAnalysisNet = true,
-			runAnalysisSimNet = true ;
+			runSimNet = false , 
+			runAnalysisNet =false,
+			runAnalysisSimNet = false;
 	
 	// layer Rd
 	private static int sizeGridX = 100, 
 			sizeGridY = 100 ;
-	private static double Da = 0.2 ,
+	private static double Da = 0.2 , 
 			Db = 0.1 ,
 			initVal0 = 1 ,
 			initVal1 = 0 ,
@@ -58,7 +58,7 @@ public class runAndAnalyze extends framework {
 	
 	// layer seed and vector field
 	private static morphogen m = morphogen.b;
-	private static double r = 2,
+	private static double r = 2 ,
 			minDistSeed = 1 , 
 			alfa = 2 ;
 	private static typeVectorField tvf = typeVectorField.slopeDistanceRadius;
@@ -76,10 +76,13 @@ public class runAndAnalyze extends framework {
 		// layer Rd
 		lRd = new layerRd(1, 1, sizeGridX, sizeGridY, typeRadius.circle);		
 		lRd.initializeCostVal(1,0);	
+	//	lRd.initializeRandomVal(10, 100, 0.9, 0, 1, 0.1);
+		
+//		for ( cell c : lRd.getListCell() ) {			System.out.println(c.getVal1() + " " + c.getVal2() );}
 		
 		// set Rd classical pattern
-		setRdType ( RdmType.solitions) ;	
-		f = 0.01 ; k = 0.02 ; 
+		setRdType ( RdmType.solitions ) ;	
+	//	f = 0.018 ; k = 0.051 ; 
 		lRd.setGsParameters(f , k , Da, Db, typeDiffusion.mooreCost );
 		
 		lMl = new layerMaxLoc(true,true, typeInit.test, typeComp.wholeGrid, m );
@@ -90,11 +93,15 @@ public class runAndAnalyze extends framework {
 		Graph locGr = lMl.getGraph() ;
 		
 		lSeed = new layerSeed( r , m , alfa ,handleLimitBehaviur.stopSimWhenReachLimit );
-		initMultiCircle(perturVal0,perturVal1,numNodes , sizeGridX/2 ,sizeGridY/2, 2 , radiusNet );		
+		initCircle(perturVal0,perturVal1,numNodes , sizeGridX/2 ,sizeGridY/2, 2 , radiusNet );		
+		// lSeed.initializationSeedThMorp(m, 0.099 , 0.1) ;
+//		initRandomPoint(10, 100, morphogen.b, 1);	
+//		initfistfulOfNodes(100, 20, new double[] {  sizeGridX/2 ,sizeGridY/2}, 1 , morphogen.b, 1 );
+//		initMultiFistFul(100, 20, 20, 2, 30  , morphogen.b, 1);
 		
+	//	initMultiCircle(20, 20, 20, 20 , 1, 0, 1);
 		lNet.setLengthEdges("length" , true );
-		
-		
+
 		NumberFormat nf = NumberFormat.getNumberInstance();
 		nf.setMaximumFractionDigits(3);
 		
@@ -107,7 +114,7 @@ public class runAndAnalyze extends framework {
 		
 		// Initialize simplify network
 		symplifyNetwork simNet = new symplifyNetwork(runSimNet, netGr);
-		simNet.init( stepToAnalyze);
+		simNet.init( stepToAnalyze );
 		Graph simNetGr = simNet.getGraph() ;
 		
 		// initialize store network
@@ -190,6 +197,8 @@ public class runAndAnalyze extends framework {
 		int t = 0 ; 
 		while ( t <= stepMax && ! lSeed.getListSeeds().isEmpty() && lNet.seedHasReachLimit == false ) {	
 			System.out.println("---- step " +t +" --------------");
+			System.out.println("numberNodes "+ netGr.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
+			System.out.println("numberMaxLo " + lMl.getNumMaxLoc());
 			// compute layers
 			lRd.updateLayer(); 
 			lMl.updateLayer();

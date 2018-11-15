@@ -1,18 +1,15 @@
-package RdmGridToNet;
+package RdmGridToNet_multiSim;
 
 import java.util.ArrayList;
 
 import org.graphstream.graph.Node;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 
-import RdmGridToNetMultiLayer.bucket;
-
 public class bucketSet extends framework {
 
 	private bucket[][] buckets ;
 	private double sizeX, sizeY;
 	private int numBucketX, numBucketY;
-	private ArrayList<bucket> listBucket = new ArrayList<bucket>();
 	
 	public bucketSet ( ) {
 		this(0,0,0,0);
@@ -44,7 +41,7 @@ public class bucketSet extends framework {
 		b.addNode(n);
 	}
 	
-// GET METHODS --------------------------------------------------------------------------------------------------------------------------------------
+// GET METHODS --------------------------------------------------------------------------------------------------------------------------------------	
 	// get list nodes in bucket whick contains node with coords X Y
 	private ArrayList<Node> getListNodes ( double X , double Y ) {
 		return bks.getBucket(X, Y).getistNodes();
@@ -118,7 +115,7 @@ public class bucketSet extends framework {
 	}
 
 
-	// PRINT METHODS ------------------------------------------------------------------------------------------------------------------------------------
+// PRINT METHODS ------------------------------------------------------------------------------------------------------------------------------------
 	protected void printListBucket () {
 		for ( int x = 0 ; x < numBucketX ; x++ )
 			for ( int y = 0 ; y < numBucketY ; y++ ) 
