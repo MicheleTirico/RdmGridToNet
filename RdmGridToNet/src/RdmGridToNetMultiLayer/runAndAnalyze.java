@@ -31,16 +31,11 @@ import viz.*;
 
 public class runAndAnalyze extends framework  {
 	
-//	protected static layerSeed lSeed = new layerSeed();
-//	protected static layerRd lRd = new layerRd();
-//	protected static layerNet lNet = new layerNet() ;
-//	protected static layerMaxLoc lMl = new layerMaxLoc();
-	
 	// common parameters
 	private static int stepToStore = 10 , 
 				stepToAnalyze = 10 ,
 				stepToPrint = 100 ,
-				stepMax = 1000 ;
+				stepMax = 10000 ;
 		
 	private static  String  path = "D:\\ownCloud\\RdmGrid_exp\\test" ;
 		
@@ -73,7 +68,7 @@ public class runAndAnalyze extends framework  {
 //	private static typeVectorField tvf = typeVectorField.slopeDistanceRadius;
 	
 	// initialize circle seeds
-	private static int numNodes = 50, 
+	private static int numNodes = 20, 
 			radiusRd = 2 , 
 			radiusNet = 4 ;
 
@@ -87,21 +82,27 @@ public class runAndAnalyze extends framework  {
 		lRd = new layerCell(1, 1, sizeGridX, sizeGridY ,2,5) ;
 		lRd.initializeCostVal(new double[] {1,0});
 		lRd.setValueOfCellAround(new double[] {1, 1}, sizeGridX/2,sizeGridY/2 ,3 );
-		lRd.setGsParameters(0.030 , 0.062, 0.2, 0.1, typeDiffusion.mooreCost);
-		
-		for ( cell c : lRd.getListCell() ) {
-	//		System.out.println(c + " " + c.getArrayIsTest().length);
-		}
-		// layer bumps
-		lBumps = new layerCell(1, 1, sizeGridX, sizeGridY ,3,3) ;
-		lBumps.initCells();		
-		lBumps.setGridInCoordsLayer(lBumps.getBumbsFromPosition (1 , 1 , 1));
-		lBumps.setGridInValsLayer(lBumps.getBumbsFromPosition (1 , 1 , 1) , 0);		
+		double [] fk = getRdType(RdmType.movingSpots);
+		lRd.setGsParameters(fk[0] , fk[1] , 0.2, 0.1, typeDiffusion.mooreCost);
 		
 		// layer max local
 		lMl = new layerMaxLoc(true,lRd,true, typeInit.test, typeComp.wholeGrid ,1);
 		lMl.initializeLayer();
 		
+		// layer bumps
+		lBumps = new layerCell(1, 1, sizeGridX, sizeGridY ,3,3) ;
+		lBumps.initCells();		
+	//	lBumps.setGridInCoordsLayer(lBumps.getBumbsFromPosition (1 , 1 , 1));
+		lBumps.setGridInValsLayer(lBumps.getBumbsFromPosition ( 1 , 1 , 10) , 0);		
+		
+		// layer infinite paraboloid 
+		lParab = new layerCell(1, 1, sizeGridX, sizeGridY ,3,3) ;
+		lParab.initCells();
+		lParab.setGridInValsLayer(lParab.getInfiniteParaboloid(0, .2000, .200, new double[] {sizeGridX/2 ,sizeGridY/2 ,0} ), 0);
+		
+//		for ( cell c : lParab.getListCell() ) {
+//			System.out.println(c.getX() + " " + c.getY() + " " + c.getVals()[0]  );
+//		}
 		// vector field Rd
 		vfRd = new vectorField(lRd, 1, 1 , sizeGridX, sizeGridY, typeVectorField.slopeDistanceRadius) ;
 		vfRd.setSlopeParameters( 1 , r, alfa, true, typeRadius.circle);
@@ -109,13 +110,18 @@ public class runAndAnalyze extends framework  {
 		vfBumps = new vectorField(lBumps,  1, 1 , sizeGridX, sizeGridY, typeVectorField.minVal);
 		vfBumps.setMinDirectionParameters(0);
 		
+		vfParab = new vectorField(lParab, 1, 1, sizeGridX , sizeGridY, typeVectorField.interpolation);
+		vfParab.setInterpolationParameters( 0, 1, 2);
+//		vfParab.setSlopeParameters( 0 , r, alfa, true, typeRadius.circle);
+		
 		lNet = new layerNet("net") ;
 		
 		// layer Seed
 		lSeed = new layerSeed(handleLimitBehaviur.stopSimWhenReachLimit, new vectorField[] { vfRd
-																						// , vfBumps 
-				} );
-		lSeed.initSeedCircle(20, 3, sizeGridX/2, sizeGridY/2);
+																						 , vfParab }
+																						, new double[] { 1 , .1 }
+		);
+		lSeed.initSeedCircle(numNodes, radiusNet, sizeGridX/2, sizeGridY/2);
 			
 		initCircle(perturVal0,perturVal1,numNodes , sizeGridX/2 ,sizeGridY/2, 2 , radiusNet );		
 		
@@ -124,12 +130,16 @@ public class runAndAnalyze extends framework  {
 		lNet.setLengthEdges("length" , true );
 		
 		// viz 
+	
 		vizLayerCell vLRd = new vizLayerCell(lRd, 1);	
 	//	vizLayerCell vLc = new vizLayerCell(lBumps, 0);	
+	//	vizLayerCell vLparab = new vizLayerCell(lParab, 0);	
 	//	vLc.step();
+	//	vLparab.step();
 
 		int t = 0 ; 
-		while ( t <= stepMax // && ! lSeed.getListSeeds().isEmpty() && lNet.seedHasReachLimit == false 
+		while ( t <= stepMax //  && ! lSeed.getListSeeds().isEmpty() 
+				//&& lNet.seedHasReachLimit == false 
 				) {	
 			System.out.println( "-------------------" + t +"-------------------");
 			

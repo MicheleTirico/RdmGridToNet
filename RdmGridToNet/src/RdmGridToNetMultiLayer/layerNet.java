@@ -81,15 +81,28 @@ public class layerNet extends framework {
 			
 			// compute vector
 			vector[ ] vectors = new vector[lSeed.getListVectorFields().length] ;
-			int a = 0 ;
-			for ( vectorField vf : lSeed.getListVectorFields() ) {
-				vectors[a] = vf.getVector(s);
-				a++;
-			}
-
-			vector sum = vectorField.getvectorSum(vectors);
+//			int a = 0 ;
+//			for ( vectorField vf : lSeed.getListVectorFields() ) {
+//				vectors[a] = vf.getVector(s);
+//				a++;
+//			}
 			
-			double[] vec = sum.getInten() ; 
+			vector v0 = vfRd.getVector(s),
+					v1 = vfParab.getVector(s);
+			
+			double[] vectorIncrem = lSeed.getVectorIncrem();  
+			double increm0 = vectorIncrem[0] ,
+					increm1 = vectorIncrem[1] ;
+			
+			double[] vec0 = v0.getInten() ,
+					vec1 = v1.getInten() ,
+					vec = new double[] { increm0 * vec0[0] + increm1 * vec1[0] ,  increm0 * vec0[1] + increm1 * vec1[1]  } ; 
+			
+			
+
+	//		vector sum = vectorField.getvectorSum(vectors, new double[] {1 ,0 });
+			
+	//		double[] vec = sum.getInten() ; 
 			
 			double coordX = s.getX() + vec[0] , coordY =  s.getY() + vec[1] ;
 			

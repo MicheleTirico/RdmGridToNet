@@ -104,6 +104,17 @@ public class layerCell extends framework {
 		}
 	}
 	
+	public double[][] getInfiniteParaboloid ( double incremZ , double a , double b , double[] coordVertex ) {
+		double[][] grid = new double [numCellX][numCellY];
+		for ( cell c : listCell ) {
+			double[] coord = c.getCoords() ;
+			int[] pos = c.getPos();		
+			grid[pos[0]][pos[1]] = a *  Math.pow( pos[0] - coordVertex[0] , 2 ) + b  *  Math.pow(pos[1]  - coordVertex[1], 2 ) + coordVertex[2] ;
+//			grid[pos[0]][pos[1]] = incremZ * ( Math.pow(pos[0], 2) / a + Math.pow(pos[1], 2) / b  ) ;
+		}
+		return grid ;
+	}
+	
 	/**
 	 * return a grid of double with value z coords 
 	 * z is computed from position of cell 

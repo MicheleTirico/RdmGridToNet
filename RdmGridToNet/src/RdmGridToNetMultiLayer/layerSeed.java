@@ -19,14 +19,16 @@ public class layerSeed extends framework {
 	public enum handleLimitBehaviur { stopSimWhenReachLimit , test }
 	protected static handleLimitBehaviur handleLimitBehaviur ;
 	private vectorField[] vectorFields ;
+	private double[] vectorIncrem ;
 	
 	public layerSeed () {
-		this(null, null) ;
+		this(null, null ,null ) ;
 	}
 			
-	public layerSeed ( handleLimitBehaviur handleLimitBehaviur , vectorField[] vectorFields  ) {
+	public layerSeed ( handleLimitBehaviur handleLimitBehaviur , vectorField[] vectorFields , double[] vectorIncrem  ) {
 		this.handleLimitBehaviur = handleLimitBehaviur ;
 		this.vectorFields = vectorFields ;
+		this.vectorIncrem = vectorIncrem ;
 	}
 	
 	public void initSeedCircle ( int numNodes , double radius , double centerX , double centerY) {		
@@ -136,6 +138,10 @@ public class layerSeed extends framework {
 		
 	public vectorField[] getListVectorFields() {
 		return vectorFields ;
+	}
+	
+	public double[] getVectorIncrem  ( ) {
+		return vectorIncrem ;
 	}
 	
 
