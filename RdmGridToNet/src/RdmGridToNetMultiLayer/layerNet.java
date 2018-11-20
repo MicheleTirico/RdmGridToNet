@@ -60,8 +60,7 @@ public class layerNet extends framework {
 		System.out.println(bks.getListBucketNotEmpty().size() ) ;		
 	}
 		
-	public void updateLayers (  int depthMax  , boolean createSeed , double minDistSeed   ) { 
-		System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
+	public void updateLayers (  int depthMax  , boolean createSeed , double minDistSeed   ) { //	System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
 	
 		Dijkstra dijkstra = new Dijkstra(Element.EDGE, "length", "length") ; 
 		ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); 
